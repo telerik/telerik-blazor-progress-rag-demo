@@ -1,0 +1,165 @@
+@page "/ai-search"
+@using Telerik.Blazor.Components
+@using Telerik.Blazor
+
+<div class="k-d-flex k-flex-col k-min-h-screen k-bg-surface k-pb-20">
+    
+    @if (!HasSearched)
+    {
+        @* Hero Section *@
+        <div class="k-d-flex k-flex-col k-flex-md-row k-align-items-center k-justify-content-between k-py-10 k-px-4 k-px-md-10 k-gap-10">
+            @* Left: Text *@
+            <div class="k-w-full k-w-md-1/2 k-pr-md-10">
+                <h1 class="k-h1 k-font-weight-bold k-mb-4">
+                    Discover <span class="text-gradient-purple-blue">Progress Agentic RAG Knowledge</span>
+                </h1>
+                <p class="k-font-size-lg k-color-subtle k-line-height-md">
+                    Search our comprehensive Nuclia knowledge base with AI-powered intelligent search for precise, contextual results about Nuclia features, capabilities, and best practices
+                </p>
+            </div>
+
+            @* Right: Image Placeholder *@
+            <div class="k-w-full k-w-md-1/2 k-h-64 k-h-md-96 hero-image-placeholder k-rounded-xl k-shadow-md">
+                @* Placeholder content or empty *@
+            </div>
+        </div>
+    }
+    else
+    {
+        @* Results Header *@
+        <div class="k-d-flex k-flex-col k-align-items-center k-pt-10 k-px-4">
+             <h1 class="k-h1 k-font-weight-bold k-mb-4 k-text-center">
+                Discover <span class="text-gradient-purple-blue">Progress Agentic RAG Knowledge</span>
+            </h1>
+        </div>
+    }
+
+    @* Search Section *@
+    <div class="k-d-flex k-flex-col k-align-items-center @(HasSearched ? "k-mt-4" : "k-mt-10") k-w-full k-px-4">
+        
+        @* Search Bar *@
+        <div class="search-box-container k-w-full">
+            <TelerikTextBox @bind-Value="@SearchQuery" 
+                            Placeholder="Ask about PARAG features, deployment, security, integrations..."
+                            Size="@ThemeConstants.TextBox.Size.Large"
+                            Rounded="@ThemeConstants.TextBox.Rounded.Full">
+                <TextBoxPrefixTemplate>
+                    <div class="k-pl-2 k-color-subtle">
+                        <TelerikSvgIcon Icon="@SvgIcon.Plus" Size="@ThemeConstants.SvgIcon.Size.Large" />
+                    </div>
+                </TextBoxPrefixTemplate>
+                <TextBoxSuffixTemplate>
+                    <div class="k-d-flex k-align-items-center k-gap-2 k-pr-1">
+                        <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat" 
+                                       Icon="@SvgIcon.MicrophoneOutline" 
+                                       Title="Voice Search" 
+                                       Class="k-rounded-full k-color-subtle" />
+                        
+                        <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                                       FillMode="@ThemeConstants.Button.FillMode.Solid"
+                                       Icon="@SvgIcon.ArrowUp"
+                                       Class="k-rounded-full k-w-10 k-h-10 k-p-0 k-d-flex k-justify-content-center k-align-items-center"
+                                       OnClick="@HandleSearch" />
+                    </div>
+                </TextBoxSuffixTemplate>
+            </TelerikTextBox>
+        </div>
+
+        @if (!HasSearched)
+        {
+            @* Popular Searches *@
+            <div class="k-mt-10 k-d-flex k-flex-col k-align-items-center k-w-full k-max-w-screen-lg">
+                <div class="k-font-size-sm k-color-subtle k-mb-4">Popular searches:</div>
+                
+                <div class="k-d-flex k-justify-content-center k-w-full">
+                     <TelerikChipList Data="@PopularSearchItems"
+                                     TextField="Text"
+                                     SelectionMode="@ChipListSelectionMode.Single"
+                                     SelectedItemsChanged="@((IEnumerable<PopularSearchItem> items) => OnChipSelected(items))"
+                                     Rounded="@ThemeConstants.Chip.Rounded.Full"
+                                     Size="@ThemeConstants.Chip.Size.Medium"
+                                     Class="k-justify-content-center" />
+                </div>
+            </div>
+        }
+        else
+        {
+            @* Search Results *@
+            <div class="k-mt-10 k-w-full k-max-w-screen-lg">
+                <div class="k-p-6">
+                    <p class="k-font-size-md k-line-height-md k-mb-4">
+                        Nuclia is an Agentic RAG-as-a-Service platform purpose-built to unlock organizational knowledge from any content source and make it accessible via AI-driven search and Q&A. It indexes all forms of unstructured data – documents, PDFs, emails, webpages, images, audio/video files, etc. – and allows querying in natural language, generating trusted answers with source citations.
+                    </p>
+                    <p class="k-font-size-md k-line-height-md k-mb-4">
+                        Here's how it works:
+                    </p>
+                    <ul class="k-list-disc k-pl-5 k-mb-4">
+                        <li><strong>Data Ingestion:</strong> Nuclia automatically indexes diverse unstructured data sources.</li>
+                        <li><strong>AI Indexing:</strong> It processes this data, extracting key information and semantic meaning.</li>
+                        <li><strong>Natural Language Querying:</strong> Users can ask questions in plain language.</li>
+                        <li><strong>AI-Driven Search & Q&A:</strong> Nuclia retrieves relevant information from the indexed data and generates comprehensive, accurate answers.</li>
+                    </ul>
+                    <p class="k-font-size-md k-line-height-md">
+                        Unlike tools focused on personal productivity within specific applications (e.g., Microsoft Copilot), Nuclia is designed for building knowledge bots, AI search bars, or Q&A systems for websites, products, or internal tools. Its core function is organizational knowledge discovery and answering questions from your proprietary data.
+                    </p>
+                </div>
+            </div>
+
+            @* Related Searches *@
+            <div class="k-mt-10 k-d-flex k-flex-col k-align-items-center k-w-full k-max-w-screen-lg">
+                <div class="k-font-size-sm k-color-subtle k-mb-4">Related searches:</div>
+                
+                <div class="k-d-flex k-justify-content-center k-w-full">
+                     <TelerikChipList Data="@PopularSearchItems"
+                                     TextField="Text"
+                                     SelectionMode="@ChipListSelectionMode.Single"
+                                     SelectedItemsChanged="@((IEnumerable<PopularSearchItem> items) => OnChipSelected(items))"
+                                     Rounded="@ThemeConstants.Chip.Rounded.Full"
+                                     Size="@ThemeConstants.Chip.Size.Medium"
+                                     Class="k-justify-content-center" />
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string SearchQuery { get; set; } = string.Empty;
+    private bool HasSearched { get; set; } = false;
+
+    public class PopularSearchItem
+    {
+        public string Text { get; set; } = string.Empty;
+    }
+
+    private List<PopularSearchItem> PopularSearchItems { get; set; } = new List<PopularSearchItem>
+    {
+        new PopularSearchItem { Text = "What is PARAG and how does it work?" },
+        new PopularSearchItem { Text = "Deployment options and requirements" },
+        new PopularSearchItem { Text = "Security features and compliance" },
+        new PopularSearchItem { Text = "API integration and capabilities" },
+        new PopularSearchItem { Text = "Pricing and licensing options" },
+        new PopularSearchItem { Text = "Use cases and customer success stories" }
+    };
+
+    private void HandleSearch()
+    {
+        // Implement search logic
+        Console.WriteLine($"Searching for: {SearchQuery}");
+        HasSearched = true;
+    }
+
+    private void OnChipSelected(IEnumerable<PopularSearchItem> items)
+    {
+        var selected = items.FirstOrDefault();
+        if (selected != null)
+        {
+            SearchQuery = selected.Text;
+            HasSearched = true;
+        }
+    }
+}            SearchQuery = selected.Text;
+            HandleSearch();
+        }
+    }
+}

@@ -1,0 +1,8 @@
+## Build outputs
+/blazor-progress-rag-demo/obj/
+/blazor-progress-rag-demo/bin/
+
+## Visual Studio Code workspace settings
+/.vscode/
+
+blazor-progress-rag-demo/appsettings.Development.json

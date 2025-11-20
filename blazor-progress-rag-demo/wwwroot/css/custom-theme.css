@@ -1,0 +1,124 @@
+/* Custom Theme Variables for AI-Powered Application */
+:root {
+  /* Colors */
+  --kendo-color-app-surface: #F8FAFF;
+  --kendo-color-on-app-surface: #0F172A;
+  --kendo-color-subtle: #6B7280;
+  --kendo-color-surface: #FFFFFF;
+  --kendo-color-surface-alt: #F1F5F9;
+  --kendo-color-on-surface: #071033;
+  --kendo-color-on-surface-alt: #334155;
+  --kendo-color-border: rgba(7,16,51,0.08);
+  --kendo-color-border-alt: rgba(7,16,51,0.04);
+  --kendo-color-base: #111827;
+  --kendo-color-base-hover: #0B1220;
+  --kendo-color-base-active: #050816;
+  --kendo-color-base-subtle: #E6EEF8;
+  --kendo-color-base-subtle-hover: #DDEAFB;
+  --kendo-color-base-subtle-active: #CFE0F7;
+  --kendo-color-on-base: #FFFFFF;
+  --kendo-color-base-emphasis: #0B1220;
+  --kendo-color-base-on-subtle: #0F172A;
+  --kendo-color-base-on-surface: #0F172A;
+  --kendo-color-primary: #3B82F6;
+  --kendo-color-primary-hover: #2563EB;
+  --kendo-color-primary-active: #1E40AF;
+  --kendo-color-primary-subtle: rgba(59,130,246,0.1);
+  --kendo-color-primary-subtle-hover: rgba(59,130,246,0.15);
+  --kendo-color-primary-subtle-active: rgba(59,130,246,0.2);
+  --kendo-color-on-primary: #FFFFFF;
+  --kendo-color-primary-emphasis: #112B4A;
+  --kendo-color-primary-on-subtle: #0F172A;
+  --kendo-color-primary-on-surface: #08306B;
+  --kendo-color-secondary: #6366F1;
+  --kendo-color-tertiary: #8B5CF6;
+  --kendo-color-info: #0EA5E9;
+  --kendo-color-success: #10B981;
+  --kendo-color-warning: #F59E0B;
+  --kendo-color-error: #EF4444;
+  --kendo-color-light: #F8FAFF;
+  --kendo-color-dark: #0B1220;
+  --kendo-color-inverse: #FFFFFF;
+
+  /* Typography */
+  --kendo-font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --kendo-font-family-serif: Georgia, 'Times New Roman', Times, serif;
+  --kendo-font-family-sans-serif: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+  --kendo-font-family-monospace: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+  --kendo-font-size-xxs: 0.625rem;
+  --kendo-font-size-xs: 0.75rem;
+  --kendo-font-size-sm: 0.875rem;
+  --kendo-font-size-md: 1rem;
+  --kendo-font-size-lg: 1.125rem;
+  --kendo-font-size-xl: 2.25rem;
+  --kendo-line-height-xs: 1;
+  --kendo-line-height-sm: 1.25;
+  --kendo-line-height-md: 1.5;
+  --kendo-line-height-lg: 1.2;
+  --kendo-font-weight-thin: 100;
+  --kendo-font-weight-extra-light: 200;
+  --kendo-font-weight-light: 300;
+  --kendo-font-weight-normal: 400;
+  --kendo-font-weight-medium: 500;
+  --kendo-font-weight-semibold: 600;
+  --kendo-font-weight-bold: 700;
+
+  /* Border Radius */
+  --kendo-border-radius-none: 0;
+  --kendo-border-radius-xs: 4px;
+  --kendo-border-radius-sm: 6px;
+  --kendo-border-radius-md: 10px;
+  --kendo-border-radius-lg: 14px;
+  --kendo-border-radius-xl: 18px;
+  --kendo-border-radius-xxl: 24px;
+  --kendo-border-radius-xxxl: 9999px;
+  --kendo-border-radius-full: 9999px;
+
+  /* Elevation */
+  --kendo-elevation-1: 0 1px 2px rgba(11,18,32,0.04);
+  --kendo-elevation-2: 0 4px 12px rgba(11,18,32,0.06);
+  --kendo-elevation-3: 0 8px 24px rgba(11,18,32,0.08);
+  --kendo-elevation-4: 0 12px 40px rgba(11,18,32,0.10);
+  --kendo-elevation-5: 0 20px 60px rgba(11,18,32,0.12);
+  --kendo-elevation-6: 0 28px 80px rgba(11,18,32,0.14);
+  --kendo-elevation-7: 0 36px 100px rgba(11,18,32,0.16);
+  --kendo-elevation-8: 0 48px 140px rgba(11,18,32,0.18);
+  --kendo-elevation-9: 0 64px 200px rgba(11,18,32,0.20);
+}
+
+/* Custom Utility Classes */
+.k-text-decoration-none {
+  text-decoration: none !important;
+}
+
+.k-min-h-screen {
+  min-height: 100vh;
+}
+
+.k-display-1 {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Figma Design System - Pill Card Spacing */
+.k-p-\[13px\] {
+  padding: 13px;
+}
+
+.k-gap-\[10px\] {
+  gap: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .k-display-1 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 575px) {
+  .k-display-1 {
+    font-size: 2rem;
+  }
+}
