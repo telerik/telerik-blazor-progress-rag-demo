@@ -122,46 +122,24 @@ public class NucliaSearchService
         {
             var response = await _chartsClient.Search.AskAsync(askRequest);
             
-            // Use dynamic to inspect the response since we don't know the exact properties of SyncAskResponse
-            // and to avoid compile errors if we guess wrong.
             if (response.Data != null)
             {
-                dynamic data = response.Data;
+                // Serialize the response data to JSON to extract the "answer_json" property
+                var json = System.Text.Json.JsonSerializer.Serialize(response.Data);
                 
-                // The response JSON shows an "answer_json" property.
-                // We need to extract this. Since we are using dynamic, we can try to access it directly
-                // or serialize the whole thing and then parse it.
-                
-                // Based on the console output, the structure is:
-                // { "answer": "", "answer_json": { ... }, ... }
-                // Note: "answer" is empty string, "answer_json" has the content.
-                
-                // Let's try to get answer_json directly.
-                // If the SDK model doesn't have the property, dynamic might fail if it's a strong typed object without that property.
-                // However, if it's a JsonElement or similar, it might work.
-                
-                // Safest bet: Serialize to JSON string, then extract "answer_json" part.
-                var json = System.Text.Json.JsonSerializer.Serialize(data);
-                
-                // We need to extract the "answer_json" object from this JSON.
-                using var doc = System.Text.Json.JsonDocument.Parse(json);
-                System.Text.Json.JsonElement answerJsonElement;
-                if (doc.RootElement.TryGetProperty("answer_json", out answerJsonElement))
+                // Deserialize into our custom model that includes answer_json
+                var askResponse = System.Text.Json.JsonSerializer.Deserialize<NucliaAskResponse>(json);
+
+                if (askResponse?.AnswerJson != null)
                 {
-                    // This is the part we want to return as the response string
-                    // so the UI can deserialize it into ChartAugmentedAnswer
-                    result.Response = answerJsonElement.GetRawText();
+                    // Return the serialized AnswerJson so the UI can consume it
+                    result.Response = System.Text.Json.JsonSerializer.Serialize(askResponse.AnswerJson);
                     onUpdate?.Invoke(result.Response);
                 }
-                else
+                else if (!string.IsNullOrEmpty(askResponse?.Answer))
                 {
-                    // Fallback if answer_json is missing
-                    System.Text.Json.JsonElement answerElement;
-                    if (doc.RootElement.TryGetProperty("answer", out answerElement))
-                    {
-                         result.Response = answerElement.GetString() ?? "";
-                         onUpdate?.Invoke(result.Response);
-                    }
+                    result.Response = askResponse.Answer;
+                    onUpdate?.Invoke(result.Response);
                 }
             }
         }
