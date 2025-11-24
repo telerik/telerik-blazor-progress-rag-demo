@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using NucliaDb;
+using blazor_progress_rag_demo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +17,28 @@ var config = new NucliaDbConfig(
     nucleiaConfig["KnowledgeBoxId"] ?? throw new InvalidOperationException("NucliaDb KnowledgeBoxId not configured"),
     nucleiaConfig["ApiKey"] ?? throw new InvalidOperationException("NucliaDb ApiKey not configured")
 );
-builder.Services.AddSingleton(config);
-builder.Services.AddScoped<NucliaDbClient>();
+
+var nucleiaChartsConfig = builder.Configuration.GetSection("NucliaDbCharts");
+var chartsConfig = new NucliaDbConfig(
+    nucleiaChartsConfig["ZoneId"] ?? throw new InvalidOperationException("NucliaDbCharts ZoneId not configured"),
+    nucleiaChartsConfig["KnowledgeBoxId"] ?? throw new InvalidOperationException("NucliaDbCharts KnowledgeBoxId not configured"),
+    nucleiaChartsConfig["ApiKey"] ?? throw new InvalidOperationException("NucliaDbCharts ApiKey not configured")
+);
+
+var nucleiaVerseConfig = builder.Configuration.GetSection("NucliaDbVerse");
+var verseConfig = new NucliaDbConfig(
+    nucleiaVerseConfig["ZoneId"] ?? throw new InvalidOperationException("NucliaDbVerse ZoneId not configured"),
+    nucleiaVerseConfig["KnowledgeBoxId"] ?? throw new InvalidOperationException("NucliaDbVerse KnowledgeBoxId not configured"),
+    nucleiaVerseConfig["ApiKey"] ?? throw new InvalidOperationException("NucliaDbVerse ApiKey not configured")
+);
+
+builder.Services.AddScoped(sp =>
+{
+    var defaultClient = new NucliaDbClient(config);
+    var chartsClient = new NucliaDbClient(chartsConfig);
+    var verseClient = new NucliaDbClient(verseConfig);
+    return new NucliaSearchService(defaultClient, chartsClient, verseClient);
+});
 
 var app = builder.Build();
 

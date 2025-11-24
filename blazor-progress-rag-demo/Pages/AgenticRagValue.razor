@@ -1,0 +1,263 @@
+@page "/agentic-rag-value"
+@using Telerik.Blazor.Components
+@using blazor_progress_rag_demo.Services
+@inject NucliaSearchService NucliaService
+
+<PageTitle>Agentic RAG Value</PageTitle>
+
+<HeroSection></HeroSection>
+
+<div class="k-mx-auto k-w-full k-px-4 k-py-10" style="max-width: 1200px;">
+    
+    @if (!IsGenerating)
+    {
+        <div class="k-text-center k-mb-10">
+            <h3 class="k-h3 k-mb-2">Configure Your Scenario</h3>
+            <p class="k-color-subtle k-font-size-lg">Tell us about your organization and we'll create a tailored value proposition</p>
+        </div>
+
+        @* Industry Section *@
+        <div class="k-mb-10">
+            <h5 class="k-h5 k-mb-4">Industry *</h5>
+            <div class="k-d-grid k-grid-cols-1 k-grid-cols-md-2 k-grid-cols-lg-3 k-gap-4">
+                @foreach (var item in Industries)
+                {
+                    <div class="@GetCardClass(SelectedIndustry, item)" @onclick="@(() => SelectIndustry(item))">
+                        <span class="k-font-weight-bold">@item</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Company Size Section *@
+        <div class="k-mb-10">
+            <h5 class="k-h5 k-mb-4">Company Size *</h5>
+            <div class="k-d-grid k-grid-cols-1 k-grid-cols-md-2 k-gap-4">
+                @foreach (var item in CompanySizes)
+                {
+                    <div class="@GetCardClass(SelectedCompanySize, item)" @onclick="@(() => SelectCompanySize(item))">
+                        <span class="k-font-weight-bold">@item</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Data Types Section *@
+        <div class="k-mb-10">
+            <h5 class="k-h5 k-mb-4">Data Types * (Select all that apply)</h5>
+            <div class="k-d-grid k-grid-cols-1 k-grid-cols-md-2 k-grid-cols-lg-3 k-gap-4">
+                @foreach (var item in DataTypes)
+                {
+                    <div class="@GetCardClass(SelectedDataType, item)" @onclick="@(() => SelectDataType(item))">
+                        <span class="k-font-weight-bold">@item</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Primary Use Case Section *@
+        <div class="k-mb-10">
+            <h5 class="k-h5 k-mb-4">Primary Use Case *</h5>
+            <div class="k-d-grid k-grid-cols-1 k-grid-cols-md-2 k-gap-4">
+                @foreach (var item in UseCases)
+                {
+                    <div class="@GetCardClass(SelectedUseCase, item)" @onclick="@(() => SelectUseCase(item))">
+                        <span class="k-font-weight-bold">@item</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Additional Details Section *@
+        <div class="k-mb-10">
+            <h5 class="k-h5 k-mb-4">Additional Details (Optional)</h5>
+            <TelerikTextArea @bind-Value="@AdditionalDetails"
+                             Placeholder="Provide any additional context about your organization, specific challenges, or requirements that would help create a more targeted value proposition..."
+                             Rows="4"
+                             ResizeMode="@TextAreaResizeMode.Vertical" />
+        </div>
+
+        @* Generate Button *@
+        <div class="k-text-center k-mt-10">
+            <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
+                           Size="@ThemeConstants.Button.Size.Large"
+                           Icon="@SvgIcon.Sparkles"
+                           Class="k-px-8 k-py-3 k-rounded-full k-font-weight-bold"
+                           OnClick="@GenerateValueProposition">
+                Generate Value Proposition
+            </TelerikButton>
+        </div>
+    }
+    else
+    {
+        @* Loading View *@
+        <div class="k-d-flex k-flex-col k-align-items-center k-justify-content-center k-py-10">
+            <div class="k-text-center k-mb-8">
+                <h3 class="k-h3 k-color-info k-mb-1">Generating</h3>
+                <h3 class="k-h3 k-color-primary k-font-weight-bold">Custom Value Proposition</h3>
+            </div>
+
+            <div class="k-mb-4">
+                @if (string.IsNullOrEmpty(GeneratedValueProposition))
+                {
+                    <TelerikLoader Size="@ThemeConstants.Loader.Size.Large" 
+                                   Type="@LoaderType.InfiniteSpinner" 
+                                   ThemeColor="@ThemeConstants.Loader.ThemeColor.Primary" />
+                    <p class="k-color-subtle k-mt-4">Analyzing industry requirements...</p>
+                }
+                else
+                {
+                    <div class="k-card k-p-6 k-rounded-lg k-bg-surface k-shadow-sm k-text-left k-mb-6" style="max-width: 800px; white-space: pre-wrap;">
+                        @GeneratedValueProposition
+                    </div>
+                }
+            </div>
+            
+            @if (string.IsNullOrEmpty(GeneratedValueProposition))
+            {
+                 @* Spacer or keep the p tag above *@
+            }
+
+            <div class="k-card k-p-6 k-rounded-lg k-bg-base-subtle k-w-full" style="max-width: 800px;">
+                <div class="k-d-grid k-grid-cols-1 k-grid-cols-md-2 k-gap-6">
+                    <div>
+                        <div class="k-font-size-sm k-color-subtle k-mb-1">Industry & Size:</div>
+                        <div class="k-font-weight-bold">@SelectedIndustry</div>
+                        <div class="k-font-weight-bold">@SelectedCompanySize</div>
+                    </div>
+                    <div>
+                        <div class="k-font-size-sm k-color-subtle k-mb-1">Data Types:</div>
+                        <div class="k-font-weight-bold">@SelectedDataType</div>
+                    </div>
+                    <div>
+                        <div class="k-font-size-sm k-color-subtle k-mb-1">Primary Use Case:</div>
+                        <div class="k-font-weight-bold">@SelectedUseCase</div>
+                    </div>
+                    <div>
+                        <div class="k-font-size-sm k-color-subtle k-mb-1">Additional Details:</div>
+                        <div class="k-font-weight-bold">@(string.IsNullOrEmpty(AdditionalDetails) ? "None provided" : AdditionalDetails)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+<style>
+    .scenario-card {
+        border: 1px solid var(--kendo-color-border, #e2e8f0);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: var(--kendo-color-surface, #ffffff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60px;
+    }
+
+    .scenario-card:hover {
+        border-color: var(--kendo-color-primary, #7c3aed);
+        background-color: var(--kendo-color-base-subtle, #f8fafc);
+    }
+
+    .scenario-card.selected {
+        border-color: var(--kendo-color-primary, #7c3aed);
+        background-color: var(--kendo-color-primary-subtle, #f3e8ff); /* Light purple bg */
+        color: var(--kendo-color-primary, #7c3aed);
+    }
+</style>
+
+@code {
+    private bool IsGenerating { get; set; } = false;
+    private string GeneratedValueProposition { get; set; } = string.Empty;
+
+    private async Task GenerateValueProposition()
+    {
+        IsGenerating = true;
+        GeneratedValueProposition = string.Empty;
+        StateHasChanged();
+
+        var prompt = $"Generate a custom value proposition for a client with the following profile:\n" +
+                     $"- Industry: {SelectedIndustry}\n" +
+                     $"- Company Size: {SelectedCompanySize}\n" +
+                     $"- Data Types: {SelectedDataType}\n" +
+                     $"- Primary Use Case: {SelectedUseCase}\n" +
+                     $"- Additional Details: {AdditionalDetails}\n\n" +
+                     $"Please provide a comprehensive value proposition.";
+
+        try
+        {
+            await NucliaService.AskAsync(prompt, (chunk) =>
+            {
+                GeneratedValueProposition = chunk;
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (Exception ex)
+        {
+            GeneratedValueProposition = $"Error generating value proposition: {ex.Message}";
+        }
+    }
+
+    private string? SelectedIndustry { get; set; }
+    private string? SelectedCompanySize { get; set; }
+    private string? SelectedDataType { get; set; }
+    private string? SelectedUseCase { get; set; }
+    private string? AdditionalDetails { get; set; }
+
+    private List<string> Industries = new List<string>
+    {
+        "Financial Services", "Healthcare", "Manufacturing", "Technology",
+        "Retail & E-commerce", "Energy & Utilities", "Government", "Education",
+        "Professional Services", "Media & Entertainment", "Transportation & Logistics",
+        "Real Estate", "Other"
+    };
+
+    private List<string> CompanySizes = new List<string>
+    {
+        "Small Business (1-100 employees)", "Mid-Market (101-1,000 employees)",
+        "Large Enterprise (1,001-10,000 employees)", "Global Enterprise (10,000+ employees)"
+    };
+
+    private List<string> DataTypes = new List<string>
+    {
+        "Customer Data", "Product Documentation", "Internal Knowledge Base",
+        "Compliance Documents", "Training Materials", "Technical Documentation",
+        "Sales & Marketing Content", "HR Policies & Procedures", "Financial Reports",
+        "Research & Development", "Legal Documents", "Operational Procedures"
+    };
+
+    private List<string> UseCases = new List<string>
+    {
+        "Customer Support Enhancement", "Customer Support Enhancement", // Duplicate in image? I'll keep one unique list based on text
+        "Sales Enablement", "Compliance & Risk Management",
+        "Research & Development", "Knowledge Management",
+        "Process Automation", "Decision Support",
+        "Content Management", "Other"
+    };
+
+    // Clean up duplicates in UseCases if any
+    protected override void OnInitialized()
+    {
+        UseCases = UseCases.Distinct().ToList();
+    }
+
+    private void SelectIndustry(string item) => SelectedIndustry = item;
+    private void SelectCompanySize(string item) => SelectedCompanySize = item;
+    private void SelectDataType(string item) => SelectedDataType = item;
+    private void SelectUseCase(string item) => SelectedUseCase = item;
+
+    private string GetCardClass(string? selectedItem, string currentItem)
+    {
+        var baseClass = "scenario-card";
+        if (selectedItem == currentItem)
+        {
+            return $"{baseClass} selected";
+        }
+        return baseClass;
+    }
+}
