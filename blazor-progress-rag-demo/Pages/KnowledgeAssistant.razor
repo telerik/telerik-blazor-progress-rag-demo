@@ -1,4 +1,226 @@
 @page "/knowledge-assistant"
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+@using System.Collections.ObjectModel
+@using blazor_progress_rag_demo.Services
+@inject blazor_progress_rag_demo.Services.NucliaSearchService NucliaService
 
-<PageTitle>Knowledge Assistant</PageTitle>
+<div class="k-d-flex k-h-screen k-w-full k-overflow-hidden">
+    <!-- Drawer -->
+    <TelerikDrawer @ref="Drawer"
+                   Data="@DrawerItems"
+                   MiniMode="false"
+                   Mode="@DrawerMode.Push"
+                   @bind-Expanded="@DrawerExpanded"
+                   Width="280px"
+                   Class="chat-drawer k-w-full k-h-full">
+        <DrawerContent>
+            <div class="k-d-flex k-flex-col k-h-full k-w-full k-bg-surface">
+                <!-- Header -->
+                <div class="k-d-flex k-align-items-center k-justify-content-between k-p-4 k-border-b k-border-solid k-border-subtle">
+                    <div class="k-d-flex k-align-items-center k-gap-2">
+                        <TelerikButton Icon="@SvgIcon.Menu" OnClick="@ToggleDrawer" FillMode="@ThemeConstants.Button.FillMode.Flat" />
+                        <span class="k-font-weight-bold k-font-size-lg">Knowledge Assistant</span>
+                    </div>
+                    <div class="k-d-flex k-gap-2">
+                        <TelerikButton Icon="@SvgIcon.Share" FillMode="@ThemeConstants.Button.FillMode.Flat">Share</TelerikButton>
+                    </div>
+                </div>
 
+                <!-- Chat Area -->
+                <div class="k-flex-1 k-overflow-hidden k-d-flex k-flex-col k-relative" id="chat-container">
+                    <TelerikChat Data="@ChatMessages"
+                                 OnSendMessage="@OnSendMessageHandler"
+                                 AuthorId="@CurrentUserId"
+                                 Class="k-h-full"
+                                 Width="100%"
+                                 Height="100%">
+                        <MessageTemplate>
+                            @{
+                                var message = context.Message;
+                                if (message != null)
+                                {
+                                    <div>
+                                        @message.Text
+                                    </div>
+                                }
+                            }
+                        </MessageTemplate>
+                    </TelerikChat>
+                </div>
+            </div>
+        </DrawerContent>
+        <Template>
+            <div class="k-d-flex k-flex-col k-h-full k-justify-content-between k-p-4 k-bg-surface-alt">
+                <div class="k-d-flex k-flex-col k-gap-2">
+                    <TelerikButton Icon="@SvgIcon.Plus" Class="k-w-full k-mb-4 k-justify-content-start">New chat</TelerikButton>
+                    
+                    <div class="k-d-flex k-flex-col k-gap-1">
+                        <TelerikButton Icon="@SvgIcon.Search" FillMode="@ThemeConstants.Button.FillMode.Flat" Class="k-justify-content-start k-text-left">Search chats</TelerikButton>
+                        <TelerikButton Icon="@SvgIcon.Folder" FillMode="@ThemeConstants.Button.FillMode.Flat" Class="k-justify-content-start k-text-left">Library</TelerikButton>
+                    </div>
+                    
+                    <div class="k-mt-6">
+                        <span class="k-color-subtle k-font-size-xs k-font-weight-bold k-text-uppercase k-mb-2 k-d-block">Chats</span>
+                        <div class="k-d-flex k-flex-col k-gap-1">
+                            @foreach (var item in HistoryItems)
+                            {
+                                <div class="k-p-2 k-rounded k-cursor-pointer hover:k-bg-surface k-text-truncate k-font-size-sm" title="@item">
+                                    @item
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="k-d-flex k-align-items-center k-gap-3 k-mt-auto k-pt-4 k-border-t k-border-solid k-border-subtle">
+                    <TelerikAvatar Type="AvatarType.Icon" ThemeColor="@ThemeConstants.Avatar.ThemeColor.Primary">
+                        <TelerikSvgIcon Icon="@SvgIcon.User" />
+                    </TelerikAvatar>
+                    <div class="k-d-flex k-flex-col">
+                        <span class="k-font-weight-bold k-font-size-sm">John Smith</span>
+                        <span class="k-font-size-xs k-color-subtle">Manager</span>
+                    </div>
+                </div>
+            </div>
+        </Template>
+    </TelerikDrawer>
+</div>
+
+<style>
+    .chat-drawer .k-drawer-wrapper {
+        border-right: 1px solid var(--k-color-border-subtle);
+    }
+    /* Remove ListView borders */
+    .k-listview {
+        border: none !important;
+        background: transparent !important;
+    }
+    .k-listview-content {
+        border: none !important;
+        background: transparent !important;
+    }
+    .k-listview-item {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+</style>
+
+@code {
+    private TelerikDrawer<DrawerItem>? Drawer { get; set; }
+    private bool DrawerExpanded { get; set; } = true;
+    private string CurrentUserId { get; set; } = "user";
+
+    private ObservableCollection<ChatMessageModel> ChatMessages { get; set; } = new ObservableCollection<ChatMessageModel>();
+
+    private List<DrawerItem> DrawerItems { get; set; } = new List<DrawerItem>(); // Not used in Template mode but required for Data param
+
+    private List<string> HistoryItems { get; set; } = new List<string>
+    {
+        "How do I get started with Kendo...",
+        "What are the best KendoReact co...",
+        "How to implement theming and s..."
+    };
+
+    protected override void OnInitialized()
+    {
+        // Initial Welcome Message
+        ChatMessages.Add(new ChatMessageModel
+        {
+            Text = "How can I help you with the Knowledge Base today?",
+            AuthorId = "user",
+            AuthorName = "John Smith",
+            Timestamp = DateTime.Now.AddMinutes(-10)
+        });
+        
+        // Bot Response (Simulated)
+        ChatMessages.Add(new ChatMessageModel
+        {
+            Text = "I am ready to assist you.",
+            AuthorId = "bot",
+            AuthorName = "Assistant",
+            Timestamp = DateTime.Now
+        });
+    }
+
+    private async Task OnSendMessageHandler(ChatSendMessageEventArgs args)
+    {
+        var userMessage = new ChatMessageModel
+        {
+            Text = args.Message,
+            AuthorId = CurrentUserId,
+            AuthorName = "John Smith",
+            Timestamp = DateTime.Now
+        };
+
+        ChatMessages.Add(userMessage);
+
+        // Bot Response Placeholder
+        var botMessage = new ChatMessageModel
+        {
+            Text = "Thinking...",
+            AuthorId = "bot",
+            AuthorName = "Assistant",
+            Timestamp = DateTime.Now
+        };
+        ChatMessages.Add(botMessage);
+
+        try 
+        {
+            await NucliaService.AskVerseAsync(args.Message, (partialResponse) => 
+            {
+                InvokeAsync(() => {
+                    var index = ChatMessages.IndexOf(botMessage);
+                    if (index != -1)
+                    {
+                        var updatedMessage = new ChatMessageModel
+                        {
+                            Text = partialResponse,
+                            AuthorId = botMessage.AuthorId,
+                            AuthorName = botMessage.AuthorName,
+                            Timestamp = botMessage.Timestamp
+                        };
+                        ChatMessages[index] = updatedMessage;
+                        botMessage = updatedMessage;
+                        StateHasChanged();
+                    }
+                });
+            });
+        }
+        catch (Exception ex)
+        {
+            var index = ChatMessages.IndexOf(botMessage);
+            if (index != -1)
+            {
+                ChatMessages[index] = new ChatMessageModel
+                {
+                    Text = "Sorry, I encountered an error processing your request: " + ex.Message,
+                    AuthorId = botMessage.AuthorId,
+                    AuthorName = botMessage.AuthorName,
+                    Timestamp = botMessage.Timestamp
+                };
+            }
+            Console.WriteLine(ex);
+        }
+    }
+
+    private void ToggleDrawer()
+    {
+        DrawerExpanded = !DrawerExpanded;
+    }
+
+    public class DrawerItem
+    {
+        public string Text { get; set; } = "";
+        public ISvgIcon? Icon { get; set; }
+    }
+
+    public class ChatMessageModel
+    {
+        public string Text { get; set; } = "";
+        public string AuthorId { get; set; } = "";
+        public string AuthorName { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+    }
+}
