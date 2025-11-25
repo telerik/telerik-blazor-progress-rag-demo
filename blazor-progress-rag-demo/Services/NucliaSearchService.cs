@@ -59,7 +59,7 @@ public class NucliaSearchService
             TopK = topK
         };
 
-        var streamResponse = _client.Search.AskStreamAsync(askRequest);
+        var streamResponse = _client.Search.AskStreamAsync(askRequest, cancellationToken);
         await foreach (var response in streamResponse)
         {
             switch (response.Item)
@@ -97,7 +97,7 @@ public class NucliaSearchService
 
         // Try non-streaming to see if it handles the schema response better
         /*
-        var streamResponse = _chartsClient.Search.AskStreamAsync(askRequest);
+        var streamResponse = _chartsClient.Search.AskStreamAsync(askRequest, cancellationToken);
         await foreach (var response in streamResponse)
         {
             switch (response.Item)
@@ -120,7 +120,7 @@ public class NucliaSearchService
         // Fallback to AskAsync (non-streaming) to debug
         try 
         {
-            var response = await _chartsClient.Search.AskAsync(askRequest);
+            var response = await _chartsClient.Search.AskAsync(askRequest, cancellationToken);
             
             if (response.Data != null)
             {
