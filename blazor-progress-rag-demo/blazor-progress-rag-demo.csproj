@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Telerik.UI.for.Blazor" Version="12.0.0" />
-      <PackageReference Include="Progress.Nuclia" Version="0.1.0-preview.2" />
+      <PackageReference Include="Progress.Nuclia" Version="0.1.0-preview.9" />
   </ItemGroup>
 
 </Project>
