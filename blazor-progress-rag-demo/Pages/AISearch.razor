@@ -58,14 +58,11 @@
             <div class="k-mt-10 k-d-flex k-flex-col k-align-items-center k-w-full k-max-w-screen-lg">
                 <div class="k-font-size-sm k-color-subtle k-mb-4">Popular searches:</div>
                 
-                <div class="k-d-flex k-justify-content-center k-w-full">
-                     <TelerikChipList Data="@PopularSearchItems"
-                                     TextField="Text"
-                                     SelectionMode="@ChipListSelectionMode.Single"
-                                     SelectedItemsChanged="@((IEnumerable<PopularSearchItem> items) => OnChipSelected(items))"
-                                     Rounded="@ThemeConstants.Chip.Rounded.Full"
-                                     Size="@ThemeConstants.Chip.Size.Medium"
-                                     Class="k-justify-content-center" />
+                <div class="k-d-flex k-justify-content-center k-flex-wrap k-gap-2 k-w-full">
+                    @foreach (var item in PopularSearchItems)
+                    {
+                        <SearchPill Text="@item.Text" OnClick="@(() => OnPillClick(item.Text))" />
+                    }
                 </div>
             </div>
         }
@@ -93,14 +90,11 @@
             <div class="k-mt-10 k-d-flex k-flex-col k-align-items-center k-w-full k-max-w-screen-lg">
                 <div class="k-font-size-sm k-color-subtle k-mb-4">Related searches:</div>
                 
-                <div class="k-d-flex k-justify-content-center k-w-full">
-                     <TelerikChipList Data="@PopularSearchItems"
-                                     TextField="Text"
-                                     SelectionMode="@ChipListSelectionMode.Single"
-                                     SelectedItemsChanged="@((IEnumerable<PopularSearchItem> items) => OnChipSelected(items))"
-                                     Rounded="@ThemeConstants.Chip.Rounded.Full"
-                                     Size="@ThemeConstants.Chip.Size.Medium"
-                                     Class="k-justify-content-center" />
+                <div class="k-d-flex k-justify-content-center k-flex-wrap k-gap-2 k-w-full">
+                    @foreach (var item in PopularSearchItems)
+                    {
+                        <SearchPill Text="@item.Text" OnClick="@(() => OnPillClick(item.Text))" />
+                    }
                 </div>
             </div>
         }
@@ -138,7 +132,7 @@
 
         try
         {
-            SearchResult = await NucliaService.AskAsync(SearchQuery, (text) =>
+            SearchResult = await NucliaService.AskVerseAsync(SearchQuery, (text) =>
             {
                 if (SearchResult != null)
                 {
@@ -154,13 +148,9 @@
         }
     }
 
-    private async Task OnChipSelected(IEnumerable<PopularSearchItem> items)
+    private async Task OnPillClick(string text)
     {
-        var selected = items.FirstOrDefault();
-        if (selected != null)
-        {
-            SearchQuery = selected.Text;
-            await HandleSearch();
-        }
+        SearchQuery = text;
+        await HandleSearch();
     }
 }

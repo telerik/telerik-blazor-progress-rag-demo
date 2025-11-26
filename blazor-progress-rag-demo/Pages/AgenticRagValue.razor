@@ -191,7 +191,7 @@
 
         try
         {
-            await NucliaService.AskAsync(prompt, (chunk) =>
+            await NucliaService.AskVerseAsync(prompt, (chunk) =>
             {
                 GeneratedValueProposition = chunk;
                 InvokeAsync(StateHasChanged);
