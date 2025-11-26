@@ -33,6 +33,9 @@ jobs:
         with:
           ak-vault-token: ${{ secrets.AK_VAULT_TOKEN_PACKAGE_READER }}
 
+      - name: Add Local Package Source
+        run: dotnet nuget add source ${{ github.workspace }}/blazor-progress-rag-demo/packages --name LocalPackages
+
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
