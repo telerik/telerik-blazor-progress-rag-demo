@@ -6,6 +6,10 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AZURE_WEBAPP_NAME: telerik-blazor-parag-demo
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
