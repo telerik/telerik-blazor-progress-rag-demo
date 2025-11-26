@@ -1,0 +1,56 @@
+name: Build and Deploy to Azure Web App
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: telerik-blazor-parag-demo
+  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '9.0.x'             # set this to the .NET Core version to use
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: Production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ./publish
+
+      - name: 'Az CLI login'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Configure Nuclia App Settings
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az webapp config appsettings set --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group blazor-PaRAG-demo --settings \
+              NucliaDb__KnowledgeBoxId="${{ secrets.NUCLIADB_KNOWLEDGEBOXID }}" \
+              NucliaDb__ApiKey="${{ secrets.NUCLIADB_APIKEY }}" \
+              NucliaDbCharts__KnowledgeBoxId="${{ secrets.NUCLIADBCHARTS_KNOWLEDGEBOXID }}" \
+              NucliaDbCharts__ApiKey="${{ secrets.NUCLIADBCHARTS_APIKEY }}" \
+              NucliaDbVerse__KnowledgeBoxId="${{ secrets.NUCLIADBVERSE_KNOWLEDGEBOXID }}" \
+              NucliaDbVerse__ApiKey="${{ secrets.NUCLIADBVERSE_APIKEY }}"
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ./publish
