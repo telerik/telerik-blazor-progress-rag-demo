@@ -1,156 +1,127 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager
 
-<div class="k-min-h-screen k-d-flex k-flex-col k-bg-app-surface"
-    style="background: radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%), radial-gradient(circle at 50% 70%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);">
-
+<div class="k-d-flex k-flex-column k-overflow-hidden" style="height: 100vh;">
     @* Header *@
-    <header class="k-d-flex k-align-items-center k-px-6 k-py-4 k-bg-surface k-border-b k-border-solid k-border-border">
+    <header class="k-d-flex k-align-items-center k-px-6 k-bg-surface k-border-b k-border-solid k-border-border" style="height: 54px; flex-shrink: 0; z-index: 10;">
         <div class="k-d-flex k-align-items-center k-gap-3">
             <img src="https://www.progress.com/assets/images/icons/progress-mark-icon.svg" alt="Progress Logo"
-                style="width: 32px; height: 32px;" />
+                style="width: 24px; height: 24px;" />
             <h1 class="k-h6 !k-m-0">Progress Agentic RAG + Telerik DevTools</h1>
         </div>
     </header>
 
-    @* Hero Section *@
-    <section class="k-d-flex k-flex-col k-align-items-center k-justify-content-center k-flex-1 k-py-24 k-px-4">
-        <div class="k-d-flex k-flex-col k-align-items-center k-gap-6 k-text-center k-w-full" style="max-width: 1200px;">
-
-            @* Gradient Title *@
-            <div class="k-d-flex k-flex-col k-gap-4 k-align-items-center">
-                <h2 class="k-display-1 !k-m-0"
-                    style="background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 4rem; font-weight: 700; line-height: 1.2;">
-                    Supercharging<br />AI-Powered Applications
-                </h2>
-                <p class="k-font-size-lg k-color-subtle !k-m-0" style="max-width: 900px;">
-                    Build AI-powered apps that look great, are easy to use, and rely on accurate, trustworthy data—so
-                    they deliver real value where it counts.
-                </p>
+    <div class="k-pos-relative k-overflow-x-hidden k-overflow-y-auto k-d-flex k-flex-column k-align-items-center k-justify-content-between k-px-md-9 k-px-xs-3"
+        style="height: calc(100vh - 54px);">
+        
+        @* Gradient background - positioned fixed to viewport *@
+        <div style="position: fixed; top: 54px; left: 0; right: 0; bottom: 0; overflow: hidden; pointer-events: none; z-index: 0;">
+             <div style="position: absolute; width: 1266px; height: 331px; left: 50%; top: calc(50% + 139.5px); transform: translate(-50%, -50%); opacity: 0.6;">
+                <div style="position: absolute; top: -90.63%; right: -23.7%; bottom: -90.63%; left: -23.7%; background: radial-gradient(circle, rgba(99,102,241,0.3) 0%, rgba(59,130,246,0.1) 50%, transparent 70%);">
+                    @* Placeholder for imgBackground *@
+                </div>
             </div>
+        </div>
 
-            @* Input Section *@
-            <div class="k-mt-8" style="width: 100%; max-width: 675px;">
-                <TelerikTextBox @bind-Value="@SearchQuery"
-                    Placeholder="Ask about features, deployment, security, integrations..." ShowPrefixSeparator="true"
-                    ShowSuffixSeparator="false" Class="k-rounded-lg k-border-2"
-                    Size="@ThemeConstants.TextBox.Size.Large">
-                    <TextBoxPrefixTemplate>
-                        <TelerikButton Icon="@SvgIcon.Plus" FillMode="@ThemeConstants.Button.FillMode.Flat"
-                            ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                            Size="@ThemeConstants.Button.Size.Medium" Title="Add" AriaLabel="Add">
-                        </TelerikButton>
-                    </TextBoxPrefixTemplate>
-                    <TextBoxSuffixTemplate>
-                        <div class="k-d-flex k-align-items-center k-gap-2">
-                            <TelerikButton Icon="@SvgIcon.MicrophoneOutline"
-                                FillMode="@ThemeConstants.Button.FillMode.Flat"
-                                ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                                Size="@ThemeConstants.Button.Size.Medium" Title="Voice Input" AriaLabel="Voice Input">
+        @* Main heading + Subtitle *@
+        <section style="position: relative; z-index: 1;">
+            <div class="k-d-flex k-align-items-center k-justify-content-center hero-wrapper">
+                <div class="k-d-flex k-flex-column k-text-center k-flex-1 k-gap-8">
+                    <h1 class="gradient-heading k-mt-20 k-mb-8" style="padding: 10px; font-size: 3rem; font-weight: 700; line-height: 1.2;">
+                        Supercharging
+                        <br />
+                        AI-Powered Applications
+                    </h1>
+                    <p class="k-font-size-xl k-text-center k-flex-1 k-mb-0">
+                        Build AI-powered apps that look great, are easy to use, and rely
+                        on accurate, trustworthy data— <br />
+                        so they deliver real value where it counts.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        @* Search bar *@
+        <section style="position: relative; z-index: 1; width: 100%; max-width: 800px;">
+            <div class="k-mt-17 k-d-flex k-flex-column k-align-items-center k-justify-content-between k-gap-25">
+                
+                <div style="width: 100%;">
+                     <TelerikTextBox @bind-Value="@SearchQuery"
+                        Placeholder="Ask about features, deployment, security, integrations..." 
+                        Class="k-rounded-lg k-border-2 custom-search-input"
+                        Size="@ThemeConstants.TextBox.Size.Large"
+                        OnChange="@HandleSearch">
+                        <TextBoxPrefixTemplate>
+                             <TelerikButton Icon="@SvgIcon.Search" FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                ThemeColor="@ThemeConstants.Button.ThemeColor.Base"
+                                Size="@ThemeConstants.Button.Size.Medium" Title="Search" AriaLabel="Search">
                             </TelerikButton>
-                            <TelerikButton Icon="@SvgIcon.ArrowUp" FillMode="@ThemeConstants.Button.FillMode.Solid"
+                        </TextBoxPrefixTemplate>
+                        <TextBoxSuffixTemplate>
+                            <TelerikButton Icon="@SvgIcon.ArrowRight" FillMode="@ThemeConstants.Button.FillMode.Solid"
                                 ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
                                 Size="@ThemeConstants.Button.Size.Medium" Rounded="@ThemeConstants.Button.Rounded.Full"
                                 Title="Send" AriaLabel="Send" OnClick="@HandleSearch">
                             </TelerikButton>
-                        </div>
-                    </TextBoxSuffixTemplate>
-                </TelerikTextBox>
-            </div>
+                        </TextBoxSuffixTemplate>
+                    </TelerikTextBox>
+                </div>
 
-            @* Demo Cards Section *@
-            <div class="k-d-flex k-flex-col k-align-items-center k-gap-8 k-mt-12 k-w-full">
-                <h3 class="k-h5 !k-m-0">Explore Demos</h3>
-
-                <div class="k-d-flex k-flex-row k-gap-8 k-justify-content-center k-flex-wrap">
-
-                    @* AI Search Pill *@
-                    <a href="/ai-search"
-                        class="k-text-decoration-none k-border k-border-solid k-border-white k-rounded-xl k-p-[13px] k-d-flex k-align-items-center k-gap-[10px] k-cursor-pointer pill-card"
-                        style="background: rgba(255,255,255,0.7);">
-                        <div class="k-w-12 k-h-12 k-rounded-md k-d-flex k-align-items-center k-justify-content-center"
-                            style="background: rgba(229, 182, 217, 0.6);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                fill="none">
-                                <path
-                                    d="M7 7L5 9L7 11M11 11L13 9L11 7M19 19L14.7 14.7M17 9C17 13.4183 13.4183 17 9 17C4.58172 17 1 13.4183 1 9C1 4.58172 4.58172 1 9 1C13.4183 1 17 4.58172 17 9Z"
-                                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <span class="k-font-size-lg k-text-black k-white-space-nowrap">AI Search</span>
-                    </a>
-
-                    @* Financial Analysis Pill *@
-                    <a href="/financial-analysis"
-                        class="k-text-decoration-none k-border k-border-solid k-border-white k-rounded-xl k-p-[13px] k-d-flex k-align-items-center k-gap-[10px] k-cursor-pointer pill-card"
-                        style="background: rgba(255,255,255,0.7);">
-                        <div class="k-w-12 k-h-12 k-rounded-md k-d-flex k-align-items-center k-justify-content-center"
-                            style="background: rgba(165, 230, 180, 0.6);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                fill="none">
-                                <path
-                                    d="M10 5C11.1046 5 12 4.10457 12 3C12 1.89543 11.1046 1 10 1C8.89543 1 8 1.89543 8 3C8 4.10457 8.89543 5 10 5ZM10 5V9M3 9H17C18.1046 9 19 9.89543 19 11V17C19 18.1046 18.1046 19 17 19H3C1.89543 19 1 18.1046 1 17V11C1 9.89543 1.89543 9 3 9Z"
-                                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <span class="k-font-size-lg k-text-black k-white-space-nowrap">Financial Analysis</span>
-                    </a>
-
-                    @* Knowledge Assistant Pill *@
-                    <a href="/knowledge-assistant"
-                        class="k-text-decoration-none k-border k-border-solid k-border-white k-rounded-xl k-p-[13px] k-d-flex k-align-items-center k-gap-[10px] k-cursor-pointer pill-card"
-                        style="background: rgba(255,255,255,0.7);">
-                        <div class="k-w-12 k-h-12 k-rounded-md k-d-flex k-align-items-center k-justify-content-center"
-                            style="background: rgba(174, 210, 247, 0.6);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                fill="none">
-                                <path
-                                    d="M10 5C11.1046 5 12 4.10457 12 3C12 1.89543 11.1046 1 10 1C8.89543 1 8 1.89543 8 3C8 4.10457 8.89543 5 10 5ZM10 5V9M3 9H17C18.1046 9 19 9.89543 19 11V17C19 18.1046 18.1046 19 17 19H3C1.89543 19 1 18.1046 1 17V11C1 9.89543 1.89543 9 3 9Z"
-                                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <span class="k-font-size-lg k-text-black k-white-space-nowrap">Knowledge Assistant</span>
-                    </a>
-
-                    @* Agentic RAG Value Pill *@
-                    <a href="/agentic-rag-value"
-                        class="k-text-decoration-none k-border k-border-solid k-border-white k-rounded-xl k-p-[13px] k-d-flex k-align-items-center k-gap-[10px] k-cursor-pointer pill-card"
-                        style="background: rgba(255,255,255,0.7);">
-                        <div class="k-w-12 k-h-12 k-rounded-md k-d-flex k-align-items-center k-justify-content-center"
-                            style="background: rgba(245, 177, 99, 0.6);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                fill="none">
-                                <path
-                                    d="M10 5C11.1046 5 12 4.10457 12 3C12 1.89543 11.1046 1 10 1C8.89543 1 8 1.89543 8 3C8 4.10457 8.89543 5 10 5ZM10 5V9M3 9H17C18.1046 9 19 9.89543 19 11V17C19 18.1046 18.1046 19 17 19H3C1.89543 19 1 18.1046 1 17V11C1 9.89543 1.89543 9 3 9Z"
-                                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <span class="k-font-size-lg k-text-black k-white-space-nowrap">Agentic RAG Value</span>
-                    </a>
-
+                @* Explore Demos section *@
+                <div class="k-d-flex k-flex-column k-align-items-center k-w-full">
+                    <p class="k-font-size-xl k-font-weight-medium k-text-center k-mb-0 k-mb-4">
+                        Explore Demos
+                    </p>
+                    <div class="k-d-flex k-flex-wrap k-justify-content-center k-align-items-center k-gap-lg-8 k-gap-md-6 k-gap-3 k-w-full">
+                        @foreach (var demo in Demos)
+                        {
+                            <div class="demo-card k-cursor-pointer k-d-flex k-flex-column k-align-items-center k-gap-2 k-p-4 k-rounded-md k-bg-surface k-shadow-sm"
+                                 @onclick="@(() => NavigateTo(demo.Path))">
+                                <div class="demo-card-icon">
+                                    @((MarkupString)demo.IconSvg)
+                                </div>
+                                <div class="k-font-size-md k-font-weight-bold">@demo.Name</div>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    @* Footer *@
-    <footer
-        class="k-d-flex k-justify-content-center k-py-6 k-px-4 k-bg-surface k-border-t k-border-solid k-border-border">
-        <p class="k-font-size-sm k-color-subtle !k-m-0 k-text-center">
-            Copyright © 2025 Progress Software. All rights reserved. Progress® AI Powered
-        </p>
-    </footer>
-
+        @* Footer *@
+        <footer class="k-pos-relative k-d-flex k-align-items-center k-justify-content-center k-opacity-50 k-mt-26 footer k-py-4">
+            <p class="k-font-size-md k-text-center !k-mb-0 k-px-4 k-py-2">
+                Copyright © 2025 Progress Software. All rights reserved. Progress® AI
+                Powered
+            </p>
+        </footer>
+    </div>
 </div>
 
 <style>
-    .pill-card {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    .gradient-heading {
+        background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .demo-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        min-width: 150px;
+        border: 1px solid var(--kendo-color-border);
+    }
+    
+    .demo-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        border-color: var(--kendo-color-primary);
     }
 
-    .pill-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
-        background: rgba(255, 255, 255, 0.9) !important;
+    /* Customizing TelerikTextBox to look more like the design if needed */
+    .custom-search-input .k-input-inner {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
 </style>
 
@@ -161,8 +132,47 @@
     {
         if (!string.IsNullOrWhiteSpace(SearchQuery))
         {
-            // Handle search logic here
-            Console.WriteLine($"Searching for: {SearchQuery}");
+            NavigationManager.NavigateTo($"/ai-search?query={Uri.EscapeDataString(SearchQuery)}");
         }
     }
+
+    private void NavigateTo(string path)
+    {
+        NavigationManager.NavigateTo(path);
+    }
+
+    private class DemoItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public string IconSvg { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
+    }
+
+    private List<DemoItem> Demos = new List<DemoItem>
+    {
+        new DemoItem 
+        { 
+            Name = "Intelligent Search", 
+            Path = "/ai-search",
+            IconSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'></circle><line x1='21' y1='21' x2='16.65' y2='16.65'></line></svg>"
+        },
+        new DemoItem 
+        { 
+            Name = "Financial Analysis", 
+            Path = "/financial-analysis",
+            IconSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='20' x2='12' y2='10'></line><line x1='18' y1='20' x2='18' y2='4'></line><line x1='6' y1='20' x2='6' y2='16'></line></svg>"
+        },
+        new DemoItem 
+        { 
+            Name = "Knowledge Assistant", 
+            Path = "/knowledge-assistant",
+            IconSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z'></path></svg>"
+        },
+        new DemoItem 
+        { 
+            Name = "Agentic RAG Value", 
+            Path = "/agentic-rag-value",
+            IconSvg = "<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'></path></svg>"
+        }
+    };
 }
