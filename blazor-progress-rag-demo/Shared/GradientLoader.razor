@@ -1,0 +1,17 @@
+<div class="gradient-loader-container k-d-flex k-flex-column k-gap-6 k-align-items-center k-py-8">
+    <h2 class="gradient-heading gradient-loader-heading k-text-center !k-mb-0">
+        @((MarkupString)Title)
+    </h2>
+    <div class="gradient-loader"></div>
+    <p class="gradient-loader-subtitle !k-mb-0">
+        @Subtitle
+    </p>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Subtitle { get; set; } = string.Empty;
+}

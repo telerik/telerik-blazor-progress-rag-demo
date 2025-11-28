@@ -3,97 +3,129 @@
 @using Telerik.Blazor
 @using blazor_progress_rag_demo.Services
 @inject NucliaSearchService NucliaService
+@inject NavigationManager NavigationManager
 
-<div class="k-d-flex k-flex-col k-min-h-screen k-bg-surface k-pb-20">
-    
-    @if (!HasSearched)
+<div class="ai-search-container k-pos-relative k-overflow-x-hidden k-overflow-y-auto">
+    @if (!HasResults)
     {
-        @* Hero Section *@
-        <HeroSection />
-    }
-    else
-    {
-        @* Results Header *@
-        <div class="k-d-flex k-flex-col k-align-items-center k-pt-10 k-px-4">
-             <h1 class="k-h1 k-font-weight-bold k-mb-4 k-text-center">
-                Discover <span class="text-gradient-purple-blue">Progress Agentic RAG Knowledge</span>
-            </h1>
-        </div>
-    }
-
-    @* Search Section *@
-    <div class="k-d-flex k-flex-col k-align-items-center @(HasSearched ? "k-mt-4" : "k-mt-10") k-w-full k-px-4">
-        
-        @* Search Bar *@
-        <div class="search-box-container k-w-full">
-            <TelerikTextBox @bind-Value="@SearchQuery" 
-                            Placeholder="Ask about PARAG features, deployment, security, integrations..."
-                            Size="@ThemeConstants.TextBox.Size.Large"
-                            Rounded="@ThemeConstants.TextBox.Rounded.Full">
-                <TextBoxPrefixTemplate>
-                    <div class="k-pl-2 k-color-subtle">
-                        <TelerikSvgIcon Icon="@SvgIcon.Plus" Size="@ThemeConstants.SvgIcon.Size.Large" />
-                    </div>
-                </TextBoxPrefixTemplate>
-                <TextBoxSuffixTemplate>
-                    <div class="k-d-flex k-align-items-center k-gap-2 k-pr-1">
-                        <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat" 
-                                       Icon="@SvgIcon.MicrophoneOutline" 
-                                       Title="Voice Search" 
-                                       Class="k-rounded-full k-color-subtle" />
-                        
-                        <TelerikButton ThemeColor="@ThemeConstants.Button.ThemeColor.Primary"
-                                       FillMode="@ThemeConstants.Button.FillMode.Solid"
-                                       Icon="@SvgIcon.ArrowUp"
-                                       Class="k-rounded-full k-w-10 k-h-10 k-p-0 k-d-flex k-justify-content-center k-align-items-center"
-                                       OnClick="@HandleSearch" />
-                    </div>
-                </TextBoxSuffixTemplate>
-            </TelerikTextBox>
+        @* Decorative circle background - only show when no results *@
+        <div class="ai-search-decorative-circle k-pos-absolute">
+            <div class="ai-search-decorative-inner k-pos-absolute">
+                <div class="ai-search-gradient-bg k-w-full k-h-full" />
+            </div>
         </div>
 
-        @if (!HasSearched)
+        @* Decorative network visualization image on the right *@
+        <VectorsBackground Show="true" />
+    }
+
+    @* Main content container *@
+    <div class="ai-search-content k-d-flex k-flex-column k-pos-relative k-overflow-hidden">
+        @if (!HasResults)
         {
-            @* Popular Searches *@
-            <div class="k-mt-10 k-d-flex k-flex-col k-align-items-center k-w-full k-max-w-screen-lg">
-                <div class="k-font-size-sm k-color-subtle k-mb-4">Popular searches:</div>
-                
-                <div class="k-d-flex k-justify-content-center k-flex-wrap k-gap-2 k-w-full">
-                    @foreach (var item in PopularSearchItems)
-                    {
-                        <SearchPill Text="@item.Text" OnClick="@(() => OnPillClick(item.Text))" />
-                    }
+            @* Initial state: Large header with description *@
+            <div class="k-d-flex k-flex-column k-gap-8 rag-hero-wrapper">
+                <h1 class="ai-search-title !k-mb-0 k-h1">
+                    Discover
+                    <br />
+                    Progress Agentic RAG Knowledge
+                </h1>
+                <p class="ai-search-description !k-mb-0">
+                    Search our comprehensive Nuclia knowledge base with AI-powered intelligent search for precise, contextual results about Nuclia features, capabilities, and best practices
+                </p>
+            </div>
+
+            @* Search input section - centered horizontally *@
+            <div class="ai-search-input-wrapper k-d-flex k-flex-column k-gap-8 search-input-wrapper k-w-full">
+                <SearchInput Query="@Query"
+                             QueryChanged="@((value) => Query = value)"
+                             OnSearchClick="@HandleSearch"
+                             IsLoading="@IsLoading"
+                             Placeholder="Ask about PARAG features, deployment, security, integrations..." />
+
+                @* Popular searches section *@
+                <div class="k-d-flex k-flex-column k-w-full k-gap-3">
+                    <p class="ai-search-popular-label !k-mb-0">
+                        Popular searches:
+                    </p>
+                    <div class="k-d-flex k-flex-wrap k-gap-1.5 k-justify-content-flex-start">
+                        @foreach (var searchText in PopularSearches)
+                        {
+                            <SearchPill Text="@searchText"
+                                        OnClick="@(() => HandleExampleSearch(searchText))"
+                                        Disabled="@IsLoading" />
+                        }
+                    </div>
                 </div>
             </div>
         }
         else
         {
-            @* Search Results *@
-            <div class="k-mt-10 k-w-full k-max-w-screen-lg">
-                <div class="k-p-6">
-                    @if (IsSearching && string.IsNullOrEmpty(SearchResult?.Response))
-                    {
-                        <div class="k-d-flex k-justify-content-center k-align-items-center k-p-4">
-                            <TelerikLoader Size="@ThemeConstants.Loader.Size.Large" />
+            @* Results state: Compact header with integrated search *@
+            <div class="ai-search-results-hero k-d-flex k-flex-column k-gap-9 k-pos-relative hero">
+                @* Decorative elements container with overflow clipping *@
+                <div class="ai-search-results-decorative-container k-pos-absolute k-overflow-hidden">
+                    @* Decorative gradient circle behind title *@
+                    <div class="ai-search-results-gradient-circle k-pos-absolute">
+                        <div class="ai-search-results-gradient-inner k-pos-absolute">
+                            <div class="ai-search-gradient-bg k-w-full k-h-full" />
                         </div>
-                    }
-                    else if (SearchResult != null)
-                    {
-                        <div class="k-font-size-md k-line-height-md k-mb-4" style="white-space: pre-wrap;">
-                            @SearchResult.Response
-                        </div>
-                    }
+                    </div>
+
+                    @* Vertical gradient shadow *@
+                    <div class="ai-search-results-shadow k-pos-absolute" />
+                </div>
+
+                <h1 class="ai-search-results-title !k-mb-0 k-text-center k-pos-relative">
+                    Discover Progress Agentic RAG Knowledge
+                </h1>
+
+                @* Search input - centered and integrated *@
+                <div class="ai-search-results-input-wrapper k-w-full k-pos-relative">
+                    <SearchInput Query="@Query"
+                                 QueryChanged="@((value) => Query = value)"
+                                 OnSearchClick="@HandleSearch"
+                                 IsLoading="@IsLoading"
+                                 Placeholder="What is PARAG and how does it work?" />
                 </div>
             </div>
+        }
 
-            @* Related Searches *@
-            <div class="k-mt-10 k-d-flex k-flex-col k-align-items-center k-w-full k-max-w-screen-lg">
-                <div class="k-font-size-sm k-color-subtle k-mb-4">Related searches:</div>
-                
-                <div class="k-d-flex k-justify-content-center k-flex-wrap k-gap-2 k-w-full">
-                    @foreach (var item in PopularSearchItems)
+        @* Results section *@
+        @if (HasResults)
+        {
+            <div class="ai-search-results-section k-d-flex k-flex-column k-overflow-hidden k-w-full results-section">
+                <div class="ai-search-results-content-wrapper k-d-flex k-flex-column k-gap-16 k-w-full results-content">
+                    @* Answer content *@
+                    @if (IsLoading)
                     {
-                        <SearchPill Text="@item.Text" OnClick="@(() => OnPillClick(item.Text))" />
+                        <GradientLoader Title="Searching<br />Knowledge Base"
+                                        Subtitle="Analyzing your query..." />
+                    }
+
+                    @if (!IsLoading && !string.IsNullOrEmpty(Answer))
+                    {
+                        <div class="ai-search-answer-text markdown-content">
+                            <MarkdownContent Text="@Answer" />
+                        </div>
+                    }
+
+                    @* Related searches section *@
+                    @if (!IsLoading && !string.IsNullOrEmpty(Answer))
+                    {
+                        <div class="k-d-flex k-flex-column k-gap-3">
+                            <p class="ai-search-popular-label !k-mb-0">
+                                Related searches:
+                            </p>
+                            <div class="k-d-flex k-flex-wrap k-justify-content-flex-start k-gap-1">
+                                @foreach (var searchText in PopularSearches)
+                                {
+                                    <SearchPill Text="@searchText"
+                                                OnClick="@(() => HandleExampleSearch(searchText))"
+                                                Disabled="@IsLoading" />
+                                }
+                            </div>
+                        </div>
                     }
                 </div>
             </div>
@@ -102,55 +134,68 @@
 </div>
 
 @code {
-    private string SearchQuery { get; set; } = string.Empty;
-    private bool HasSearched { get; set; } = false;
-    private bool IsSearching { get; set; } = false;
-    private StreamingAskResult? SearchResult { get; set; }
+    private string Query { get; set; } = string.Empty;
+    private bool IsLoading { get; set; } = false;
+    private string Answer { get; set; } = string.Empty;
+    private string CurrentQuestion { get; set; } = string.Empty;
 
-    public class PopularSearchItem
-    {
-        public string Text { get; set; } = string.Empty;
-    }
+    private bool HasResults => !string.IsNullOrEmpty(Answer) || IsLoading || !string.IsNullOrEmpty(CurrentQuestion);
 
-    private List<PopularSearchItem> PopularSearchItems { get; set; } = new List<PopularSearchItem>
+    private List<string> PopularSearches = new List<string>
     {
-        new PopularSearchItem { Text = "What is PARAG and how does it work?" },
-        new PopularSearchItem { Text = "Deployment options and requirements" },
-        new PopularSearchItem { Text = "Security features and compliance" },
-        new PopularSearchItem { Text = "API integration and capabilities" },
-        new PopularSearchItem { Text = "Pricing and licensing options" },
-        new PopularSearchItem { Text = "Use cases and customer success stories" }
+        "What is PARAG and how does it work?",
+        "Deployment options and requirements",
+        "Security features and compliance",
+        "API integration and capabilities",
+        "Pricing and licensing options",
+        "Use cases and customer success stories"
     };
+
+    protected override void OnInitialized()
+    {
+        // Check for query parameter from navigation
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("query", out var queryParam))
+        {
+            Query = queryParam.ToString();
+            _ = HandleSearch();
+        }
+    }
 
     private async Task HandleSearch()
     {
-        if (string.IsNullOrWhiteSpace(SearchQuery)) return;
+        if (string.IsNullOrWhiteSpace(Query) || IsLoading)
+        {
+            return;
+        }
 
-        HasSearched = true;
-        IsSearching = true;
-        SearchResult = new StreamingAskResult();
+        IsLoading = true;
+        Answer = string.Empty;
+        CurrentQuestion = Query;
+        StateHasChanged();
 
         try
         {
-            SearchResult = await NucliaService.AskVerseAsync(SearchQuery, (text) =>
+            await NucliaService.AskVerseAsync(Query, (partialResponse) =>
             {
-                if (SearchResult != null)
-                {
-                    SearchResult.Response = text;
-                    InvokeAsync(StateHasChanged);
-                }
+                Answer = partialResponse;
+                InvokeAsync(StateHasChanged);
             });
+        }
+        catch (Exception ex)
+        {
+            Answer = $"Sorry, I encountered an error: {ex.Message}";
         }
         finally
         {
-            IsSearching = false;
+            IsLoading = false;
             await InvokeAsync(StateHasChanged);
         }
     }
 
-    private async Task OnPillClick(string text)
+    private async Task HandleExampleSearch(string searchText)
     {
-        SearchQuery = text;
+        Query = searchText;
         await HandleSearch();
     }
 }

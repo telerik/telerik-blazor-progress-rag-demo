@@ -1,0 +1,96 @@
+@using Telerik.Blazor.Components
+
+<TelerikMediaQuery Media="(max-width: 768px)" OnChange="@((bool matches) => IsMobile = matches)" />
+
+<TelerikDrawer @bind-Expanded="@IsExpanded"
+               Data="@DrawerItems"
+               Mode="@DrawerMode.Push"
+               Width="220px"
+               Class="k-border-none drawer-navigation"
+               MiniMode="false">
+    <Template>
+        <div class="k-drawer-items k-h-full">
+                <TelerikTooltip TargetSelector=".drawer-nav-item" Position="@TooltipPosition.Right" />
+                <div>
+                    @foreach (var item in DrawerItems)
+                    {
+                        <div class="drawer-nav-item k-drawer-item @(item.IsSelected ? "k-selected" : "")"
+                             @onclick="@(() => OnItemClick(item))"
+                             title="Interaction is disabled for this demo.">
+                            <img src="@item.Icon" alt="@item.Text" />
+                            <span class="k-item-text">@item.Text</span>
+                        </div>
+                    }
+                </div>
+                
+                <div class="k-mt-6 k-d-flex k-flex-column k-justify-content-between k-flex-1">
+                    <TelerikTooltip TargetSelector=".drawer-chat-item" Position="@TooltipPosition.Right" />
+                    <div>
+                        <span class="k-p-4" style="color: #A1B0C7">Chats</span>
+                        <div class="drawer-chat-item k-drawer-item" title="Interaction is disabled for this demo.">
+                            <span class="k-text-ellipsis">How do I get started with KendoReact components?</span>
+                        </div>
+                        <div class="drawer-chat-item k-drawer-item" title="Interaction is disabled for this demo.">
+                            <span class="k-text-ellipsis">What are the best KendoReact components for data visualization?</span>
+                        </div>
+                        <div class="drawer-chat-item k-drawer-item" title="Interaction is disabled for this demo.">
+                            <span class="k-text-ellipsis">How to implement theming and styling with KendoReact?</span>
+                        </div>
+                    </div>
+                    
+                    <div class="k-d-flex k-gap-2 k-align-items-center k-p-4">
+                        <TelerikAvatar Type="@AvatarType.Image">
+                            <img src="images/drawer-user.svg" alt="User" />
+                        </TelerikAvatar>
+                        <div class="k-d-flex k-flex-column">
+                            <span>John Smith</span>
+                            <span style="opacity: 0.5">Manager</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </Template>
+    <DrawerContent>
+        <div style="height: calc(100vh - 54px)">
+            @ChildContent
+        </div>
+    </DrawerContent>
+</TelerikDrawer>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool IsExpanded { get; set; } = true;
+    private bool IsMobile { get; set; } = false;
+
+    private List<DrawerItem> DrawerItems { get; set; } = new()
+    {
+        new DrawerItem { Text = "New chat", Icon = "images/new-chat.svg", Route = "#" },
+        new DrawerItem { Text = "Search chats", Icon = "images/search.svg", Route = "#" },
+        new DrawerItem { Text = "Library", Icon = "images/book-open.svg", Route = "#" }
+    };
+
+    protected override void OnParametersSet()
+    {
+        IsExpanded = !IsMobile;
+    }
+
+    private void OnItemClick(DrawerItem item)
+    {
+        // Navigation disabled for demo
+        foreach (var i in DrawerItems)
+        {
+            i.IsSelected = false;
+        }
+        item.IsSelected = true;
+    }
+
+    public class DrawerItem
+    {
+        public string Text { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+        public string Route { get; set; } = string.Empty;
+        public bool IsSelected { get; set; } = false;
+    }
+}

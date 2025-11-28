@@ -9,17 +9,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="~/" />
-    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-    <link href="css/site.css" rel="stylesheet" />
     <link rel="icon" type="image/ico" href="favicon.ico"/>
     
-    <link rel="stylesheet" href="_content/Telerik.UI.for.Blazor/css/kendo-theme-default/all.css" />
+    <link rel="stylesheet" href="https://unpkg.com/@@progress/kendo-theme-bootstrap/dist/all.css" />
     <link rel="stylesheet" href="https://unpkg.com/@@progress/kendo-theme-utils/dist/all.css" />
     <script src="_content/Telerik.UI.for.Blazor/js/telerik-blazor.js"></script>
-    <link rel="stylesheet" href="css/custom-theme.css" />
+    <link href="css/site.css" rel="stylesheet" />
+    <script src="js/search-input.js"></script>
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>
-<body>
+<body class="k-body">
     <component type="typeof(App)" render-mode="ServerPrerendered" />
 
     <div id="blazor-error-ui">
