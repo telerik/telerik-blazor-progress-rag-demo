@@ -1,0 +1,52 @@
+@using Telerik.Blazor.Components
+@inject IJSRuntime JSRuntime
+
+<div class="code-block-wrapper">
+    <div class="code-block-container k-d-flex k-align-items-center k-justify-content-between k-p-2 k-overflow-x-auto">
+        <pre class="code-block-pre">@Code</pre>
+        <TelerikButton OnClick="@HandleCopy"
+                       FillMode="@ThemeConstants.Button.FillMode.Flat"
+                       Size="@ThemeConstants.Button.Size.Small"
+                       Class="@GetButtonClass()"
+                       Title="@(Copied ? "Copied!" : "Copy code")">
+            <TelerikSvgIcon Icon="@SvgIcon.Copy" Size="@ThemeConstants.SvgIcon.Size.Small" />
+            @if (Copied)
+            {
+                <span class="code-copy-text">Copied!</span>
+            }
+        </TelerikButton>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Code { get; set; } = string.Empty;
+
+    [Parameter]
+    public string BlockKey { get; set; } = string.Empty;
+
+    private bool Copied { get; set; } = false;
+
+    private string GetButtonClass()
+    {
+        return Copied ? "code-copy-button copied" : "code-copy-button";
+    }
+
+    private async Task HandleCopy()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Code);
+            Copied = true;
+            StateHasChanged();
+            
+            await Task.Delay(2000);
+            Copied = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to copy code: {ex.Message}");
+        }
+    }
+}

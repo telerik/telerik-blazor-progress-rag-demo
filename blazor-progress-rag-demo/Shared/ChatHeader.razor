@@ -1,0 +1,46 @@
+@using blazor_progress_rag_demo.Services
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+
+<TelerikTooltip TargetSelector=".chat-header-share-btn" Position="@TooltipPosition.Bottom" />
+
+<div class="chat-header k-d-flex k-justify-content-between k-align-items-center k-px-4 k-py-2">
+    @if (!string.IsNullOrEmpty(FirstUserMessage))
+    {
+        <span>@FirstUserMessage</span>
+    }
+    <TelerikButton Icon="@SvgIcon.Share"
+                   FillMode="@ThemeConstants.Button.FillMode.Flat"
+                   Title="Interaction is disabled for this demo."
+                   Class="chat-header-share-btn">
+        Share
+    </TelerikButton>
+</div>
+
+@code {
+    /// <summary>
+    /// The collection of chat messages to extract the first user message from.
+    /// </summary>
+    [Parameter]
+    public IEnumerable<IChatMessage>? Messages { get; set; }
+
+    /// <summary>
+    /// The author ID that represents the user (as opposed to the bot).
+    /// </summary>
+    [Parameter]
+    public string UserId { get; set; } = "user";
+
+    private string? FirstUserMessage
+    {
+        get
+        {
+            if (Messages == null)
+            {
+                return null;
+            }
+
+            var first = Messages.FirstOrDefault(m => m.AuthorId == UserId);
+            return first?.Text;
+        }
+    }
+}

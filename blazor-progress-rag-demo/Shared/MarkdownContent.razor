@@ -1,0 +1,225 @@
+@using Microsoft.AspNetCore.Components
+@using System.Text.RegularExpressions
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+
+@foreach (var element in ParsedElements)
+{
+    @element
+}
+
+@code {
+    [Parameter]
+    public string? Text { get; set; }
+
+    private List<RenderFragment> ParsedElements { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        ParsedElements = ParseMarkdown(Text);
+    }
+
+    private List<RenderFragment> ParseMarkdown(string? text)
+    {
+        var elements = new List<RenderFragment>();
+        
+        if (string.IsNullOrEmpty(text))
+            return elements;
+
+        var lines = text.Split('\n');
+        var currentCodeBlock = new List<string>();
+        var inCodeBlock = false;
+        var currentList = new List<(string Content, bool IsOrdered)>();
+
+        void FlushList()
+        {
+            if (currentList.Count == 0) return;
+
+            var listItems = currentList.ToList();
+            var isOrdered = listItems[0].IsOrdered;
+            
+            elements.Add(builder =>
+            {
+                if (isOrdered)
+                {
+                    builder.OpenElement(0, "ol");
+                    builder.AddAttribute(1, "style", "padding-left: 24px; margin-bottom: 8px; list-style-type: decimal;");
+                }
+                else
+                {
+                    builder.OpenElement(0, "ul");
+                    builder.AddAttribute(1, "style", "padding-left: 24px; margin-bottom: 8px; list-style-type: disc;");
+                }
+
+                var seq = 2;
+                for (int i = 0; i < listItems.Count; i++)
+                {
+                    var marginBottom = i == listItems.Count - 1 ? "0" : "4px";
+                    builder.OpenElement(seq++, "li");
+                    builder.AddAttribute(seq++, "style", $"margin-bottom: {marginBottom};");
+                    builder.OpenElement(seq++, "span");
+                    builder.AddAttribute(seq++, "style", "line-height: 1.2;");
+                    builder.AddMarkupContent(seq++, ProcessInlineMarkdown(listItems[i].Content));
+                    builder.CloseElement(); // span
+                    builder.CloseElement(); // li
+                }
+
+                builder.CloseElement(); // ol/ul
+            });
+
+            currentList.Clear();
+        }
+
+        foreach (var line in lines)
+        {
+            var trimmedLine = line.Trim();
+
+            // Check for code block start/end
+            if (trimmedLine.StartsWith("```"))
+            {
+                FlushList();
+                if (!inCodeBlock)
+                {
+                    inCodeBlock = true;
+                }
+                else
+                {
+                    inCodeBlock = false;
+                    var code = string.Join("\n", currentCodeBlock);
+                    elements.Add(builder =>
+                    {
+                        builder.OpenComponent<CodeBlockWithCopy>(0);
+                        builder.AddAttribute(1, "Code", code);
+                        builder.AddAttribute(2, "BlockKey", $"code-{elements.Count}");
+                        builder.CloseComponent();
+                    });
+                    currentCodeBlock.Clear();
+                }
+                continue;
+            }
+
+            if (inCodeBlock)
+            {
+                currentCodeBlock.Add(line);
+                continue;
+            }
+
+            // Handle headings
+            if (line.StartsWith("### "))
+            {
+                FlushList();
+                var content = line[4..];
+                elements.Add(builder =>
+                {
+                    builder.OpenElement(0, "h3");
+                    builder.AddAttribute(1, "style", "margin-top: 16px; margin-bottom: 8px; font-size: 1.2em; font-weight: bold;");
+                    builder.AddMarkupContent(2, ProcessInlineMarkdown(content));
+                    builder.CloseElement();
+                });
+            }
+            else if (line.StartsWith("## "))
+            {
+                FlushList();
+                var content = line[3..];
+                elements.Add(builder =>
+                {
+                    builder.OpenElement(0, "h2");
+                    builder.AddAttribute(1, "style", "margin-top: 18px; margin-bottom: 10px; font-size: 1.4em; font-weight: bold;");
+                    builder.AddMarkupContent(2, ProcessInlineMarkdown(content));
+                    builder.CloseElement();
+                });
+            }
+            else if (line.StartsWith("# "))
+            {
+                FlushList();
+                var content = line[2..];
+                elements.Add(builder =>
+                {
+                    builder.OpenElement(0, "h1");
+                    builder.AddAttribute(1, "style", "margin-top: 20px; margin-bottom: 12px; font-size: 1.6em; font-weight: bold;");
+                    builder.AddMarkupContent(2, ProcessInlineMarkdown(content));
+                    builder.CloseElement();
+                });
+            }
+            // Handle unordered lists
+            else if (Regex.IsMatch(trimmedLine, @"^[-*+]\s"))
+            {
+                var content = trimmedLine[2..];
+                currentList.Add((content, false));
+            }
+            // Handle ordered lists
+            else if (Regex.IsMatch(trimmedLine, @"^\d+\.\s"))
+            {
+                var content = Regex.Replace(trimmedLine, @"^\d+\.\s", "");
+                currentList.Add((content, true));
+            }
+            // Handle empty lines
+            else if (string.IsNullOrWhiteSpace(trimmedLine))
+            {
+                FlushList();
+            }
+            // Regular paragraph
+            else
+            {
+                FlushList();
+                var content = line;
+                elements.Add(builder =>
+                {
+                    builder.OpenElement(0, "p");
+                    builder.AddAttribute(1, "style", "margin-bottom: 8px;");
+                    builder.AddMarkupContent(2, ProcessInlineMarkdown(content));
+                    builder.CloseElement();
+                });
+            }
+        }
+
+        FlushList();
+        return elements;
+    }
+
+    private static string ProcessInlineMarkdown(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+
+        var result = new System.Text.StringBuilder();
+        var regex = new Regex(@"(\*\*([^*]+)\*\*)|(\*([^*]+)\*)|(`([^`]+)`)|\[([^\]]+)\]\(([^)]+)\)");
+        var lastIndex = 0;
+
+        foreach (Match match in regex.Matches(text))
+        {
+            if (match.Index > lastIndex)
+            {
+                result.Append(System.Web.HttpUtility.HtmlEncode(text[lastIndex..match.Index]));
+            }
+
+            if (!string.IsNullOrEmpty(match.Groups[1].Value))
+            {
+                result.Append($"<strong>{System.Web.HttpUtility.HtmlEncode(match.Groups[2].Value)}</strong>");
+            }
+            else if (!string.IsNullOrEmpty(match.Groups[3].Value))
+            {
+                result.Append($"<em>{System.Web.HttpUtility.HtmlEncode(match.Groups[4].Value)}</em>");
+            }
+            else if (!string.IsNullOrEmpty(match.Groups[5].Value))
+            {
+                result.Append($"<code style=\"background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em;\">{System.Web.HttpUtility.HtmlEncode(match.Groups[6].Value)}</code>");
+            }
+            else if (!string.IsNullOrEmpty(match.Groups[7].Value))
+            {
+                var linkText = System.Web.HttpUtility.HtmlEncode(match.Groups[7].Value);
+                var linkUrl = System.Web.HttpUtility.HtmlEncode(match.Groups[8].Value);
+                result.Append($"<a href=\"{linkUrl}\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"color: #0066cc; text-decoration: underline;\">{linkText}</a>");
+            }
+
+            lastIndex = match.Index + match.Length;
+        }
+
+        if (lastIndex < text.Length)
+        {
+            result.Append(System.Web.HttpUtility.HtmlEncode(text[lastIndex..]));
+        }
+
+        return result.Length > 0 ? result.ToString() : System.Web.HttpUtility.HtmlEncode(text);
+    }
+}

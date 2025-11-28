@@ -1,0 +1,61 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="k-chat-message-content">
+    @if (IsSenderMessage)
+    {
+        <div class="chat-message-user-bubble k-py-3 k-px-4">
+            <p class="chat-message-user-text !k-mb-0">@Text</p>
+        </div>
+    }
+    else if (IsTyping)
+    {
+        <div class="k-chat-message-text k-text-base-on-subtle">
+            <div class="chat-message-bot-content">
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="k-chat-message-text k-text-base-on-subtle">
+            <div class="chat-message-bot-content markdown-content">
+                <MarkdownContent Text="@Text" />
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The plain text content of the chat message.
+    /// </summary>
+    [Parameter]
+    public string? Text { get; set; }
+
+    /// <summary>
+    /// The author ID of the message.
+    /// </summary>
+    [Parameter]
+    public string? AuthorId { get; set; }
+
+    /// <summary>
+    /// The author ID representing the current user; defaults to "user".
+    /// </summary>
+    [Parameter]
+    public string UserId { get; set; } = "user";
+
+    /// <summary>
+    /// Indicates if the bot is currently typing.
+    /// </summary>
+    [Parameter]
+    public bool IsTyping { get; set; } = false;
+
+    /// <summary>
+    /// Determines if this message was sent by the user (true) or the bot (false).
+    /// </summary>
+    private bool IsSenderMessage => string.Equals(AuthorId, UserId, StringComparison.OrdinalIgnoreCase);
+}
