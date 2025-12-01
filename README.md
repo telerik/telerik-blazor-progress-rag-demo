@@ -2,7 +2,7 @@
 
 A comprehensive demo application showcasing the powerful integration between **Progress Agentic RAG AI-powered search capabilities** and **Telerik Blazor UI components**. This application demonstrates how to build intelligent, data-driven interfaces that combine enterprise-grade AI retrieval with beautiful, functional user interfaces.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-blue)](https://your-demo-url-here.com)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-blue)](https://telerik-blazor-parag-demo.azurewebsites.net/)
 
 ## 🚀 Product Links
 
@@ -99,7 +99,7 @@ A dynamic value proposition generator that:
 
 ## 🛠️ Technology Stack
 
-- **.NET 9.0** - Latest .NET framework
+- **.NET 9.0** 
 - **Blazor Server** - Server-side Blazor with SignalR
 - **Telerik UI for Blazor 12.0.0** - Professional UI component suite
 - **Progress Nuclia SDK 0.1.0-preview.9** - AI integration library
