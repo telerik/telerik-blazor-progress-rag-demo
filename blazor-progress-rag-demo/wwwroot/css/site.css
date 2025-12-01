@@ -850,7 +850,14 @@ main {
 
 .search-input .k-textarea {
   align-self: stretch;
+  height: 40px;
 }
+
+.search-input textarea {
+  align-self: stretch;
+  height: 40px;
+}
+
 
 /* Vectors Background */
 .vectors-background {
