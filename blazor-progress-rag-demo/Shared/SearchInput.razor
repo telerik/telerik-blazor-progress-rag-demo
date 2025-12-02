@@ -1,0 +1,147 @@
+@using Telerik.Blazor.Components
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<TelerikMediaQuery Media="(max-width: 768px)" OnChange="@((bool matches) => IsMobile = matches)" />
+
+<div @ref="WrapperRef" class="search-input-container k-w-full">
+<TelerikTextArea Value="@Query"
+                 ValueChanged="@HandleValueChanged"
+                 Class="search-input k-white-space-none k-align-items-center k-flex-col k-flex-md-row k-w-full k-p-1"
+                 Rounded="@ThemeConstants.TextArea.Rounded.Full"
+                 Size="@ThemeConstants.TextArea.Size.Large"
+                 Placeholder="@Placeholder"
+                 Enabled="@(!IsLoading)"
+                 Rows="@GetRows()"
+                 ResizeMode="TextAreaResizeMode.Auto"
+                 ShowPrefixSeparator="false"
+                 ShowSuffixSeparator="false"
+                 AdornmentsOrientation="@GetAdornmentsOrientation()">
+    <TextAreaPrefixTemplate>
+        <span id="prefix-button" class="k-d-none k-d-md-inline-flex" title="Interaction is disabled for this demo.">
+            <TelerikButton Rounded="@ThemeConstants.Button.Rounded.Full"
+                           Icon="@SvgIcon.Plus"
+                           Size="@ThemeConstants.Button.Size.Large"
+                           FillMode="@ThemeConstants.Button.FillMode.Clear"
+                           Class="search-input-button" />
+        </span>
+        <TelerikTooltip TargetSelector="#prefix-button" Position="@TooltipPosition.Top" />
+    </TextAreaPrefixTemplate>
+    <TextAreaSuffixTemplate>
+        @* Desktop buttons *@
+        <span id="mic-button" class="k-d-none k-d-md-inline-flex" title="Interaction is disabled for this demo.">
+            <TelerikButton Rounded="@ThemeConstants.Button.Rounded.Full"
+                           Icon="@SvgIcon.MicrophoneOutline"
+                           FillMode="@ThemeConstants.Button.FillMode.Clear"
+                           Size="@ThemeConstants.Button.Size.Large"
+                           Class="search-input-button" />
+        </span>
+        <TelerikTooltip TargetSelector="#mic-button" Position="@TooltipPosition.Top" />
+        <TelerikButton Rounded="@ThemeConstants.Button.Rounded.Full"
+                       Icon="@SvgIcon.ArrowUp"
+                       OnClick="@HandleSend"
+                       Enabled="@(!IsLoading)"
+                       Size="@ThemeConstants.Button.Size.Large"
+                       Class="send-button k-d-none k-d-md-inline-flex" />
+        @* Mobile buttons *@
+        <div class="k-d-flex k-d-md-none k-align-items-stretch k-w-full">
+            <span id="mobile-plus-button" title="Interaction is disabled for this demo.">
+                <TelerikButton Rounded="@ThemeConstants.Button.Rounded.Full"
+                               Icon="@SvgIcon.Plus"
+                               Size="@ThemeConstants.Button.Size.Large"
+                               FillMode="@ThemeConstants.Button.FillMode.Clear"
+                               Class="search-input-button" />
+            </span>
+            <TelerikTooltip TargetSelector="#mobile-plus-button" Position="@TooltipPosition.Top" />
+            <span id="mobile-mic-button" title="Interaction is disabled for this demo.">
+                <TelerikButton Rounded="@ThemeConstants.Button.Rounded.Full"
+                               Icon="@SvgIcon.MicrophoneOutline"
+                               FillMode="@ThemeConstants.Button.FillMode.Clear"
+                               Size="@ThemeConstants.Button.Size.Large"
+                               Class="search-input-button" />
+            </span>
+            <TelerikTooltip TargetSelector="#mobile-mic-button" Position="@TooltipPosition.Top" />
+            <div class="k-spacer"></div>
+            <TelerikButton Rounded="@ThemeConstants.Button.Rounded.Full"
+                           Icon="@SvgIcon.ArrowUp"
+                           OnClick="@HandleSend"
+                           Enabled="@(!IsLoading)"
+                           Size="@ThemeConstants.Button.Size.Large"
+                           Class="send-button" />
+        </div>
+    </TextAreaSuffixTemplate>
+</TelerikTextArea>
+</div>
+
+@code {
+    [Parameter]
+    public string Query { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> QueryChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnSearchClick { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Type a message...";
+
+    [Parameter]
+    public bool ForceOneRow { get; set; } = false;
+
+    private bool IsMobile { get; set; } = false;
+    private ElementReference WrapperRef { get; set; }
+    private DotNetObjectReference<SearchInput>? DotNetRef { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            DotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("searchInputInterop.initialize", WrapperRef, DotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnEnterPressed()
+    {
+        await HandleSend();
+    }
+
+    private int GetRows()
+    {
+        if (ForceOneRow)
+        {
+            return 1;
+        }
+        return IsMobile ? 3 : 1;
+    }
+
+    private TextAreaAdornmentsOrientation GetAdornmentsOrientation()
+    {
+        return IsMobile ? TextAreaAdornmentsOrientation.Vertical : TextAreaAdornmentsOrientation.Horizontal;
+    }
+
+    private async Task HandleValueChanged(string value)
+    {
+        Query = value;
+        await QueryChanged.InvokeAsync(value);
+    }
+
+    private async Task HandleSend()
+    {
+        if (!string.IsNullOrWhiteSpace(Query))
+        {
+            await OnSearchClick.InvokeAsync();
+        }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        DotNetRef?.Dispose();
+        return ValueTask.CompletedTask;
+    }
+}

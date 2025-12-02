@@ -1,34 +1,38 @@
 @inject NavigationManager NavigationManager
 @implements IDisposable
 
-<TelerikMediaQuery Media="(max-width: 1024px)" OnChange="@((matches) => isMobile = matches)" />
+<TelerikMediaQuery Media="(max-width: 1024px)" OnChange="HandleMediaQueryChange" />
 
 @if (IsHomePage)
 {
     <TelerikAppBar PositionMode="@AppBarPositionMode.Sticky"
-                   Class="custom-appbar">
-        <AppBarSection Class="k-justify-content-center k-gap-2 k-w-full k-flex-lg-row k-flex-col">
-            <div class="appbar-home-logo-container" @onclick="GoHome">
-                <img src="images/progress-logo.svg" alt="Progress Logo" class="appbar-logo-image" />
+                   Class="@GetAppBarClass()">
+        <AppBarSection Class="k-justify-content-center k-gap-2 k-w-full k-flex-lg-row k-flex-col k-pos-relative">
+            <div class="k-d-flex k-justify-content-center k-align-items-center k-gap-2 k-w-full k-flex-lg-row k-flex-col" @onclick="GoHome">
+                <div class="app-bar-logo-container">
+                    <img class="app-bar-logo-image k-d-block k-h-full k-w-full"
+                         src="images/progress-logo.svg"
+                         alt="Progress Logo" />
+                </div>
+                <p class="app-bar-title !k-m-0 k-font-weight-medium k-text-center">
+                    Agentic RAG + Telerik DevTools
+                </p>
             </div>
-            <p class="!k-m-0 k-font-weight-medium k-text-center appbar-home-title">
-                Progress Agentic RAG + Telerik DevTools
-            </p>
         </AppBarSection>
     </TelerikAppBar>
 }
 else
 {
     <TelerikAppBar PositionMode="@AppBarPositionMode.Sticky"
-                   Class="@($"custom-appbar {(isMobile ? "mobile" : "")}")">
+                   Class="@GetAppBarClass()">
         <AppBarSection>
-            <div class="appbar-brand-container" @onclick="GoHome">
-                <div class="@($"appbar-logo-container {(isMobile ? "mobile" : "")}")">
-                    <img src="@(isMobile ? "images/progress-logo-compact.svg" : "images/progress-logo.svg")"
-                         alt="Progress Logo"
-                         class="appbar-logo-image" />
+            <div class="app-bar-logo-wrapper k-d-flex k-align-items-center k-gap-2" @onclick="GoHome">
+                <div class="@GetLogoContainerClass()">
+                    <img class="app-bar-logo-image k-d-block k-h-full k-w-full"
+                         src="@(isMobile ? "images/progress-logo-compact.svg" : "images/progress-logo.svg")"
+                         alt="Progress Logo" />
                 </div>
-                <span class="@($"k-font-weight-medium appbar-title {(isMobile ? "mobile" : "")}")">
+                <span class="@GetTitleClass()">
                     Agentic RAG + Telerik DevTools
                 </span>
             </div>
@@ -39,10 +43,13 @@ else
         <AppBarSection>
             @if (!isMobile)
             {
-                <div class="appbar-nav-container">
+                <div class="k-d-flex k-gap-6 k-align-items-center">
                     @foreach (var item in NavItems)
                     {
-                        <NavLink class="nav-link" href="@item.Path" Match="NavLinkMatch.All" ActiveClass="k-active">
+                        <NavLink class="nav-link"
+                                 href="@item.Path"
+                                 Match="NavLinkMatch.All"
+                                 ActiveClass="k-active">
                             @item.Label
                         </NavLink>
                     }
@@ -50,9 +57,8 @@ else
             }
             else
             {
-                <div id="menu-button"
-                     class="appbar-mobile-menu-button"
-                     @onclick="@(() => popoverRef?.Show())">
+                <div id="@MenuButtonId"
+                     class="app-bar-menu-button k-d-flex k-align-items-center k-gap-2">
                     MENU
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4 18L20 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -62,12 +68,13 @@ else
                 </div>
 
                 <TelerikPopover @ref="popoverRef"
-                                AnchorSelector="#menu-button"
+                                AnchorSelector="@($"#{MenuButtonId}")"
                                 ShowOn="@PopoverShowOn.Click"
                                 Position="@PopoverPosition.Bottom"
+                                ShowCallout="false"
                                 Class="mobile-menu-popup">
                     <PopoverContent>
-                        <div class="appbar-mobile-menu-content">
+                        <div class="mobile-menu-popup-content">
                             @foreach (var item in NavItems)
                             {
                                 <div class="@GetMobileMenuItemClass(item.Path)"
@@ -84,17 +91,32 @@ else
 }
 
 @code {
+    private const string MenuButtonId = "mobile-menu-button";
+
     private bool isMobile;
     private TelerikPopover? popoverRef;
 
-    private bool IsHomePage => NavigationManager.Uri == NavigationManager.BaseUri;
-
-    private List<NavItem> NavItems = new()
+    private bool IsHomePage
     {
-        new NavItem { Label = "Intelligent Search", Path = "ai-search" },
-        new NavItem { Label = "Finance Analysis", Path = "financial-analysis" },
-        new NavItem { Label = "Knowledge Assistant", Path = "knowledge-assistant" },
-        new NavItem { Label = "Agentic RAG Value", Path = "agentic-rag-value" }
+        get
+        {
+            var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+            return string.Equals(currentPath, "/", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    private static readonly IReadOnlyDictionary<string, string[]> PathAliases = new Dictionary<string, string[]>
+    {
+        ["/finance-analysis"] = new[] { "/financial-analysis" },
+        ["/value-proposition"] = new[] { "/agentic-rag-value" }
+    };
+
+    private IReadOnlyList<(string Label, string Path)> NavItems { get; } = new (string Label, string Path)[]
+    {
+        ("Intelligent Search", "/ai-search"),
+        ("Finance Analysis", "/finance-analysis"),
+        ("Knowledge Assistant", "/knowledge-assistant"),
+        ("Agentic RAG Value", "/value-proposition")
     };
 
     protected override void OnInitialized()
@@ -102,9 +124,45 @@ else
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    private string GetAppBarClass()
     {
-        StateHasChanged();
+        return $"app-bar{(isMobile && !IsHomePage ? " app-bar-mobile" : string.Empty)} k-overflow-hidden";
+    }
+
+    private string GetLogoContainerClass()
+    {
+        return isMobile
+            ? "k-pos-relative app-bar-logo-compact-container"
+            : "k-pos-relative app-bar-logo-full-container";
+    }
+
+    private string GetTitleClass()
+    {
+        return isMobile
+            ? "k-font-weight-medium app-bar-title-mobile"
+            : "k-font-weight-medium app-bar-title-desktop";
+    }
+
+    private void HandleMediaQueryChange(bool matches)
+    {
+        var transitionedToDesktop = !matches && isMobile;
+        isMobile = matches;
+
+        if (transitionedToDesktop)
+        {
+            CloseMenu();
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        await InvokeAsync(() =>
+        {
+            CloseMenu();
+            StateHasChanged();
+        });
     }
 
     public void Dispose()
@@ -114,24 +172,53 @@ else
 
     private void GoHome()
     {
+        CloseMenu();
         NavigationManager.NavigateTo("/");
     }
 
     private void NavigateTo(string path)
     {
+        CloseMenu();
         NavigationManager.NavigateTo(path);
+    }
+
+    private void CloseMenu()
+    {
         popoverRef?.Hide();
     }
 
     private string GetMobileMenuItemClass(string path)
     {
-        var isActive = NavigationManager.ToAbsoluteUri(path).ToString().Equals(NavigationManager.Uri, StringComparison.OrdinalIgnoreCase);
-        return $"appbar-mobile-menu-item {(isActive ? "active" : "")}";
+        return $"mobile-menu-item{(IsActivePath(path) ? " active" : string.Empty)}";
     }
 
-    private class NavItem
+    private bool IsActivePath(string path)
     {
-        public string Label { get; set; } = "";
-        public string Path { get; set; } = "";
+        var current = NormalizePath(new Uri(NavigationManager.Uri));
+        var target = NormalizePath(NavigationManager.ToAbsoluteUri(path));
+
+        if (string.Equals(current, target, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (PathAliases.TryGetValue(target, out var aliases))
+        {
+            foreach (var alias in aliases)
+            {
+                if (string.Equals(current, NormalizePath(NavigationManager.ToAbsoluteUri(alias)), StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static string NormalizePath(Uri uri)
+    {
+        var value = uri.AbsolutePath.TrimEnd('/');
+        return string.IsNullOrEmpty(value) ? "/" : value;
     }
 }

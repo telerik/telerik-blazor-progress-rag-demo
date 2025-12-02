@@ -1,0 +1,66 @@
+@using blazor_progress_rag_demo.Services
+
+<div class="k-d-flex k-flex-column k-gap-3">
+    <SearchInput Query="@InputValue"
+                 QueryChanged="@HandleInputChange"
+                 OnSearchClick="@HandleSend"
+                 IsLoading="@IsLoading"
+                 Placeholder="@Placeholder"
+                 ForceOneRow="@ForceOneRow" />
+
+    @if (Suggestions != null && Suggestions.Any())
+    {
+        <div class="k-d-flex k-flex-wrap k-gap-1.5 k-w-full suggestions-container">
+            @foreach (var suggestion in Suggestions)
+            {
+                <SearchPill Text="@suggestion.Text"
+                            OnClick="@(() => HandleSuggestionClick(suggestion))"
+                            Disabled="@IsLoading" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSendMessage { get; set; }
+
+    [Parameter]
+    public List<ChatSuggestion>? Suggestions { get; set; }
+
+    [Parameter]
+    public EventCallback<ChatSuggestion> OnSuggestionClick { get; set; }
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Type a message...";
+
+    [Parameter]
+    public bool ForceOneRow { get; set; } = false;
+
+    private string InputValue { get; set; } = string.Empty;
+
+    private void HandleInputChange(string value)
+    {
+        InputValue = value;
+    }
+
+    private async Task HandleSend()
+    {
+        if (!string.IsNullOrWhiteSpace(InputValue) && OnSendMessage.HasDelegate)
+        {
+            await OnSendMessage.InvokeAsync(InputValue);
+            InputValue = string.Empty;
+        }
+    }
+
+    private async Task HandleSuggestionClick(ChatSuggestion suggestion)
+    {
+        if (OnSuggestionClick.HasDelegate && !IsLoading)
+        {
+            await OnSuggestionClick.InvokeAsync(suggestion);
+        }
+    }
+}

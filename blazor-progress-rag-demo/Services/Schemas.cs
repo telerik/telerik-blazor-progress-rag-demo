@@ -1,5 +1,11 @@
 namespace blazor_progress_rag_demo.Services;
 
+public class ChatSuggestion
+{
+    public string Id { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
+}
+
 public static class Schemas
 {
     public const string ChartJsonSchema = """

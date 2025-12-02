@@ -1,0 +1,20 @@
+@if (Show)
+{
+    <div class="vectors-background k-pos-absolute k-overflow-visible"
+         style="width: @Width; height: @Height;">
+        <img class="vectors-background-image k-h-full k-w-full k-d-block k-pos-absolute"
+             src="images/vectors.svg"
+             alt="" />
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Width { get; set; } = "472px";
+
+    [Parameter]
+    public string Height { get; set; } = "523px";
+
+    [Parameter]
+    public bool Show { get; set; } = true;
+}

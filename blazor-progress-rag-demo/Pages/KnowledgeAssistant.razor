@@ -5,139 +5,95 @@
 @using blazor_progress_rag_demo.Services
 @inject blazor_progress_rag_demo.Services.NucliaSearchService NucliaService
 
-<div class="k-d-flex k-h-screen k-w-full k-overflow-hidden">
-    <!-- Drawer -->
-    <TelerikDrawer @ref="Drawer"
-                   Data="@DrawerItems"
-                   MiniMode="false"
-                   Mode="@DrawerMode.Push"
-                   @bind-Expanded="@DrawerExpanded"
-                   Width="280px"
-                   Class="chat-drawer k-w-full k-h-full">
-        <DrawerContent>
-            <div class="k-d-flex k-flex-col k-h-full k-w-full k-bg-surface">
-                <!-- Header -->
-                <div class="k-d-flex k-align-items-center k-justify-content-between k-p-4 k-border-b k-border-solid k-border-subtle">
-                    <div class="k-d-flex k-align-items-center k-gap-2">
-                        <TelerikButton Icon="@SvgIcon.Menu" OnClick="@ToggleDrawer" FillMode="@ThemeConstants.Button.FillMode.Flat" />
-                        <span class="k-font-weight-bold k-font-size-lg">Knowledge Assistant</span>
-                    </div>
-                    <div class="k-d-flex k-gap-2">
-                        <TelerikButton Icon="@SvgIcon.Share" FillMode="@ThemeConstants.Button.FillMode.Flat">Share</TelerikButton>
-                    </div>
-                </div>
+<DrawerComponent>
+    <div class="knowledge-assistant-container k-d-flex k-flex-column k-overflow-x-hidden k-pos-relative k-h-full">
 
-                <!-- Chat Area -->
-                <div class="k-flex-1 k-overflow-hidden k-d-flex k-flex-col k-relative" id="chat-container">
-                    <TelerikChat Data="@ChatMessages"
-                                 OnSendMessage="@OnSendMessageHandler"
-                                 AuthorId="@CurrentUserId"
-                                 Class="k-h-full"
-                                 Width="100%"
-                                 Height="100%">
-                        <MessageTemplate>
-                            @{
-                                var message = context.Message;
-                                if (message != null)
-                                {
-                                    <div>
-                                        @message.Text
-                                    </div>
-                                }
-                            }
-                        </MessageTemplate>
-                    </TelerikChat>
+        @* Background Illustration with Vectors - Only show in idle state *@
+        <VectorsBackground Show="@(!HasConversationStarted)" />
+
+        @* Hero Section - Only visible in idle state *@
+        @if (!HasConversationStarted)
+        {
+            <div class="knowledge-assistant-hero k-d-flex k-flex-column knowledge-assistant-hero-wrapper k-pos-relative">
+                <div class="knowledge-assistant-hero-content k-d-flex k-flex-column k-w-full k-gap-9">
+                    <h1 class="knowledge-assistant-title !k-mb-0 k-h1">
+                        Progress Agentic RAG Knowledge Assistant
+                    </h1>
+                    <p class="knowledge-assistant-description !k-mb-0">
+                        Use AI search to quickly find accurate, relevant information about Progress Agentic RAG—its features, capabilities, and best practices.
+                    </p>
                 </div>
             </div>
-        </DrawerContent>
-        <Template>
-            <div class="k-d-flex k-flex-col k-h-full k-justify-content-between k-p-4 k-bg-surface-alt">
-                <div class="k-d-flex k-flex-col k-gap-2">
-                    <TelerikButton Icon="@SvgIcon.Plus" Class="k-w-full k-mb-4 k-justify-content-start">New chat</TelerikButton>
-                    
-                    <div class="k-d-flex k-flex-col k-gap-1">
-                        <TelerikButton Icon="@SvgIcon.Search" FillMode="@ThemeConstants.Button.FillMode.Flat" Class="k-justify-content-start k-text-left">Search chats</TelerikButton>
-                        <TelerikButton Icon="@SvgIcon.Folder" FillMode="@ThemeConstants.Button.FillMode.Flat" Class="k-justify-content-start k-text-left">Library</TelerikButton>
-                    </div>
-                    
-                    <div class="k-mt-6">
-                        <span class="k-color-subtle k-font-size-xs k-font-weight-bold k-text-uppercase k-mb-2 k-d-block">Chats</span>
-                        <div class="k-d-flex k-flex-col k-gap-1">
-                            @foreach (var item in HistoryItems)
-                            {
-                                <div class="k-p-2 k-rounded k-cursor-pointer hover:k-bg-surface k-text-truncate k-font-size-sm" title="@item">
-                                    @item
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
+        }
 
-                <div class="k-d-flex k-align-items-center k-gap-3 k-mt-auto k-pt-4 k-border-t k-border-solid k-border-subtle">
-                    <TelerikAvatar Type="AvatarType.Icon" ThemeColor="@ThemeConstants.Avatar.ThemeColor.Primary">
-                        <TelerikSvgIcon Icon="@SvgIcon.User" />
-                    </TelerikAvatar>
-                    <div class="k-d-flex k-flex-col">
-                        <span class="k-font-weight-bold k-font-size-sm">John Smith</span>
-                        <span class="k-font-size-xs k-color-subtle">Manager</span>
-                    </div>
-                </div>
+        @if (HasConversationStarted)
+        {
+            <ChatHeader Messages="@ChatMessagesAsInterface" />
+        }
+
+        @* Chat Component *@
+        <div class="knowledge-assistant-conversation k-d-flex k-flex-column k-flex-1 k-align-items-center k-w-full k-p-6 k-gap-8 conversation-container @(HasConversationStarted ? "knowledge-assistant-conversation-started" : "")">
+            <div class="knowledge-assistant-chat-wrapper chat-content-wrapper k-w-full k-d-flex k-flex-column k-pos-relative @(!HasConversationStarted ? "show-gradient" : "") @(HasConversationStarted ? "knowledge-assistant-chat-flex-full" : "knowledge-assistant-chat-flex-none")">
+                <TelerikChat @ref="ChatRef"
+                             Data="@(HasConversationStarted ? ChatMessages.Skip(1).ToList() : ChatMessages.ToList())"
+                             OnSendMessage="@OnSendMessageHandler"
+                             AuthorId="@CurrentUserId"
+                             AuthorImageUrlField="AuthorImageUrl"
+                             Class="k-border-transparent"
+                             Height="@(HasConversationStarted ? "100%" : null)"
+                             MessageWidthMode="MessageWidthMode.Full">
+                    <MessageTemplate>
+                        @{
+                            var message = context.Message;
+                            var isTyping = message is ChatMessageModel chatModel && chatModel.IsTyping;
+                        }
+                        <ChatMessage Text="@message?.Text"
+                                     AuthorId="@message?.AuthorId"
+                                     UserId="@CurrentUserId"
+                                     IsTyping="@isTyping" />
+                    </MessageTemplate>
+                    <TimestampTemplate>
+                        @* Empty to hide timestamps *@
+                    </TimestampTemplate>
+                    <MessageBoxTemplate>
+                        <ChatMessageBox IsLoading="@IsLoading"
+                                        Suggestions="@AvailableSuggestions"
+                                        OnSuggestionClick="@HandleSuggestionClick"
+                                        OnSendMessage="@HandleSendMessage"
+                                        Placeholder="Try a suggestion or ask about KendoReact..." />
+                    </MessageBoxTemplate>
+                </TelerikChat>
             </div>
-        </Template>
-    </TelerikDrawer>
-</div>
-
-<style>
-    .chat-drawer .k-drawer-wrapper {
-        border-right: 1px solid var(--k-color-border-subtle);
-    }
-    /* Remove ListView borders */
-    .k-listview {
-        border: none !important;
-        background: transparent !important;
-    }
-    .k-listview-content {
-        border: none !important;
-        background: transparent !important;
-    }
-    .k-listview-item {
-        border: none !important;
-        background: transparent !important;
-        padding: 0 !important;
-    }
-</style>
+        </div>
+    </div>
+</DrawerComponent>
 
 @code {
-    private TelerikDrawer<DrawerItem>? Drawer { get; set; }
-    private bool DrawerExpanded { get; set; } = true;
+    private TelerikChat<ChatMessageModel>? ChatRef { get; set; }
+    private bool IsLoading { get; set; } = false;
     private string CurrentUserId { get; set; } = "user";
 
     private ObservableCollection<ChatMessageModel> ChatMessages { get; set; } = new ObservableCollection<ChatMessageModel>();
 
-    private List<DrawerItem> DrawerItems { get; set; } = new List<DrawerItem>(); // Not used in Template mode but required for Data param
+    private bool HasConversationStarted => ChatMessages.Count > 1;
 
-    private List<string> HistoryItems { get; set; } = new List<string>
+    private IEnumerable<IChatMessage> ChatMessagesAsInterface => ChatMessages.Cast<IChatMessage>();
+
+    private List<ChatSuggestion> KendoSuggestions = new List<ChatSuggestion>
     {
-        "How do I get started with Kendo...",
-        "What are the best KendoReact co...",
-        "How to implement theming and s..."
+        new ChatSuggestion { Id = "1", Text = "How do I get started with KendoReact components?" },
+        new ChatSuggestion { Id = "2", Text = "What are the best KendoReact components for data visualization?" },
+        new ChatSuggestion { Id = "3", Text = "How to implement theming and styling in KendoReact?" }
     };
+
+    private List<ChatSuggestion> AvailableSuggestions => ChatMessages.Count <= 1 ? KendoSuggestions : new List<ChatSuggestion>();
 
     protected override void OnInitialized()
     {
         // Initial Welcome Message
         ChatMessages.Add(new ChatMessageModel
         {
-            Text = "How can I help you with the Knowledge Base today?",
-            AuthorId = "user",
-            AuthorName = "John Smith",
-            Timestamp = DateTime.Now.AddMinutes(-10)
-        });
-        
-        // Bot Response (Simulated)
-        ChatMessages.Add(new ChatMessageModel
-        {
-            Text = "I am ready to assist you.",
+            Text = "👋 Hello! I'm your Progress Agentic RAG AI assistant. I can help you with KendoReact questions and documentation. Try one of the suggestions below, or ask me anything about KendoReact like:\n- components\n- theming\n- data visualization\n- and more!",
             AuthorId = "bot",
             AuthorName = "Assistant",
             Timestamp = DateTime.Now
@@ -146,29 +102,49 @@
 
     private async Task OnSendMessageHandler(ChatSendMessageEventArgs args)
     {
+        await SendMessage(args.Message);
+    }
+
+    private async Task HandleSendMessage(string text)
+    {
+        await SendMessage(text);
+    }
+
+    private async Task HandleSuggestionClick(ChatSuggestion suggestion)
+    {
+        await SendMessage(suggestion.Text);
+    }
+
+    private async Task SendMessage(string messageText)
+    {
         var userMessage = new ChatMessageModel
         {
-            Text = args.Message,
+            Text = messageText,
             AuthorId = CurrentUserId,
-            AuthorName = "John Smith",
+            AuthorName = "",
+            AuthorImageUrl = "images/drawer-user.svg",
             Timestamp = DateTime.Now
         };
 
         ChatMessages.Add(userMessage);
+        IsLoading = true;
+        StateHasChanged();
 
-        // Bot Response Placeholder
+        // Bot Response Placeholder with typing indicator
         var botMessage = new ChatMessageModel
         {
-            Text = "Thinking...",
+            Text = "",
             AuthorId = "bot",
-            AuthorName = "Assistant",
-            Timestamp = DateTime.Now
+            AuthorName = "",
+            Timestamp = DateTime.Now.AddMilliseconds(1),
+            IsTyping = true
         };
         ChatMessages.Add(botMessage);
+        StateHasChanged();
 
         try 
         {
-            await NucliaService.AskVerseAsync(args.Message, (partialResponse) => 
+            await NucliaService.AskAsync(messageText, (partialResponse) => 
             {
                 InvokeAsync(() => {
                     var index = ChatMessages.IndexOf(botMessage);
@@ -176,10 +152,12 @@
                     {
                         var updatedMessage = new ChatMessageModel
                         {
+                            Id = botMessage.Id,
                             Text = partialResponse,
                             AuthorId = botMessage.AuthorId,
                             AuthorName = botMessage.AuthorName,
-                            Timestamp = botMessage.Timestamp
+                            Timestamp = botMessage.Timestamp,
+                            IsTyping = false
                         };
                         ChatMessages[index] = updatedMessage;
                         botMessage = updatedMessage;
@@ -195,6 +173,7 @@
             {
                 ChatMessages[index] = new ChatMessageModel
                 {
+                    Id = botMessage.Id,
                     Text = "Sorry, I encountered an error processing your request: " + ex.Message,
                     AuthorId = botMessage.AuthorId,
                     AuthorName = botMessage.AuthorName,
@@ -203,24 +182,21 @@
             }
             Console.WriteLine(ex);
         }
+        finally
+        {
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
-    private void ToggleDrawer()
+    public class ChatMessageModel : IChatMessage
     {
-        DrawerExpanded = !DrawerExpanded;
-    }
-
-    public class DrawerItem
-    {
-        public string Text { get; set; } = "";
-        public ISvgIcon? Icon { get; set; }
-    }
-
-    public class ChatMessageModel
-    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         public string Text { get; set; } = "";
         public string AuthorId { get; set; } = "";
         public string AuthorName { get; set; } = "";
+        public string? AuthorImageUrl { get; set; }
         public DateTime Timestamp { get; set; }
+        public bool IsTyping { get; set; } = false;
     }
 }
