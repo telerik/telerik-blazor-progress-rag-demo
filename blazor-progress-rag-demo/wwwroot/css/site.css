@@ -301,10 +301,9 @@ main {
     rgba(0, 119, 255, 0.6) 360deg
   );
   filter: blur(75px);
-  opacity: 0.6;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 115px;
+  bottom: 64px;
   border-radius: 815px;
   pointer-events: none;
   z-index: -1;
@@ -324,9 +323,8 @@ main {
     rgba(0, 119, 255, 0.6) 360deg
   );
   filter: blur(75px);
-  opacity: 0.6;
   left: 50%;
-  bottom: 115px;
+  bottom: 64px;
   transform: translateX(-50%);
   border-radius: 815px;
   pointer-events: none;
