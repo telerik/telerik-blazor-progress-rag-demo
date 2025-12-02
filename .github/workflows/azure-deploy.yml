@@ -32,10 +32,8 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies
-        run: dotnet restore 
-        env:
-          TELERIK_API_KEY: ${{ secrets.TELERIK_API_KEY }}
+      - name: Configure Telerik NuGet source
+        run: dotnet nuget update source telerik --username api-key --password ${{ secrets.TELERIK_API_KEY }} --store-password-in-clear-text
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
