@@ -23,6 +23,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       TELERIK_LICENSE: ${{ secrets.KENDO_UI_LICENSE }}
+      TELERIK_API_KEY: ${{ secrets.TELERIK_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
