@@ -99,8 +99,6 @@ main {
   background: transparent;
 }
 
-.search-input 
-
 /* Mobile: Make suffix full width when in vertical orientation */
 @media (max-width: 768px) {
   .search-input .k-input-suffix {
