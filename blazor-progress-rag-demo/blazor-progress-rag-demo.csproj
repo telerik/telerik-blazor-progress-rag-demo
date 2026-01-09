@@ -10,7 +10,15 @@
 
   <ItemGroup>
     <PackageReference Include="Telerik.UI.for.Blazor" Version="12.0.0" />
-      <PackageReference Include="Progress.Nuclia" Version="0.1.0-preview.9" />
+    <PackageReference Include="Progress.Nuclia" Version="0.1.0-preview.20" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="packages\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\arag-dotnet-sdk\NucliaDb\NucliaDb.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,338 @@
+@page "/financial-analysis"
+@page "/finance-analysis"
+@using NucliaDb
+@using System.Collections.ObjectModel
+@using NucliaDb.Model
+@using Telerik.Blazor.Components
+@using Telerik.SvgIcons
+
+@if (!IsChartsExpanded)
+{
+    @* Default Single-Column Layout with Drawer *@
+    <DrawerComponent>
+        <div class="finance-analysis-container k-d-flex k-flex-column k-overflow-x-hidden k-justify-content-between k-pos-relative k-h-full financial-analysis">
+
+            @* Background Illustration with Vectors - Only show on initial screen *@
+            <VectorsBackground Show="@(!HasConversationStarted)" />
+
+            @* Hero Section - Only show on initial screen *@
+            <HeroCard Visible="@(!HasConversationStarted)" />
+
+            @* Page Header *@
+            @if (HasConversationStarted)
+            {
+                <ChatHeader Messages="@ChatMessagesAsInterface" />
+            }
+
+            @* Conversation Area *@
+            <div class="finance-analysis-chat-wrapper k-d-flex k-flex-column k-flex-1 k-p-6 k-gap-8 chat-wrapper @(!HasConversationStarted ? "show-gradient" : "")">
+                <div class="k-d-flex k-flex-column k-align-items-center k-justify-content-flex-end k-h-full @(HasConversationStarted ? "finance-analysis-chat-wrapper-conversation" : "")">
+                    @RenderChat()
+                </div>
+            </div>
+        </div>
+    </DrawerComponent>
+}
+else
+{
+    @* Two-Panel Expanded Layout (No Drawer) *@
+    <div class="finance-preview-wrapper k-overflow-auto preview-wrapper k-d-flex k-flex-col">
+        @* Page Header *@
+        <ChatHeader Messages="@ChatMessagesAsInterface" />
+
+        <div class="k-d-grid k-grid-cols-1 k-grid-cols-xl-2 preview k-flex-1">
+            @* Left Panel - Chat *@
+            <div class="k-align-self-end k-d-none k-d-xl-flex chat-preview k-pos-relative">
+                @RenderChat()
+            </div>
+
+            @* Right Panel - Charts *@
+            <div class="finance-charts-preview k-d-flex k-flex-col k-py-4 k-align-content-center charts-preview">
+                @* Glassmorphism Card *@
+                <div class="finance-charts-container k-d-flex k-flex-column k-text-center k-align-self-center k-w-full">
+                    @* Close Button *@
+                    <TelerikButton Class="finance-close-button k-pos-absolute"
+                                   OnClick="@HandleCloseCharts"
+                                   FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                   Rounded="@ThemeConstants.Button.Rounded.Full"
+                                   Icon="@SvgIcon.X" />
+
+                    @* Charts Display *@
+                    <div class="k-d-flex k-flex-col k-gap-2.5">
+                        @foreach (var chart in SelectedCharts.Take(3))
+                        {
+                            <div class="k-d-flex k-flex-col">
+                                <p class="!k-mb-0 k-font-weight-medium k-color-subtle">
+                                    @chart.Title
+                                </p>
+                                <TelerikChart Height="300px">
+                                    <ChartCategoryAxes>
+                                        <ChartCategoryAxis Categories="@chart.Categories.ToArray()">
+                                            <ChartCategoryAxisLabels>
+                                                <ChartCategoryAxisLabelsRotation Angle="0" />
+                                            </ChartCategoryAxisLabels>
+                                        </ChartCategoryAxis>
+                                    </ChartCategoryAxes>
+                                    <ChartValueAxes>
+                                        <ChartValueAxis>
+                                            <ChartValueAxisLabels Format="{0:n0}" />
+                                        </ChartValueAxis>
+                                    </ChartValueAxes>
+                                    <ChartSeriesItems>
+                                        @foreach (var series in chart.Series)
+                                        {
+                                            var seriesData = series.Data.Cast<object>().ToList();
+                                            <ChartSeries Type="ChartSeriesType.Column"
+                                                         Name="@series.Name"
+                                                         Data="@seriesData">
+                                                <ChartSeriesTooltip Visible="true" />
+                                            </ChartSeries>
+                                        }
+                                    </ChartSeriesItems>
+                                    <ChartLegend Position="ChartLegendPosition.Bottom" />
+                                </TelerikChart>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool IsChartsExpanded { get; set; } = false;
+    private bool IsLoading { get; set; } = false;
+    private string CurrentUserId { get; set; } = "user";
+
+    private ObservableCollection<ChatMessageModel> ChatMessages { get; set; } = new ObservableCollection<ChatMessageModel>();
+    private List<ChartDataModel> SelectedCharts { get; set; } = new List<ChartDataModel>();
+
+    private bool HasConversationStarted => ChatMessages.Count > 1;
+
+    private IEnumerable<IChatMessage> ChatMessagesAsInterface => ChatMessages.Cast<IChatMessage>();
+
+    private List<ChatSuggestion> FinancialSuggestions = new List<ChatSuggestion>
+    {
+        new ChatSuggestion { Id = "1", Text = "Compare Nvidia and Google revenue?" },
+        new ChatSuggestion { Id = "2", Text = "How does each product line contribute to Apple's revenue?" },
+        new ChatSuggestion { Id = "3", Text = "What are the financial results of Google in 2024 compared to 2023?" }
+    };
+
+    private List<ChatSuggestion> AvailableSuggestions => ChatMessages.Count <= 1 ? FinancialSuggestions : new List<ChatSuggestion>();
+
+    protected override void OnInitialized()
+    {
+        // Initial Welcome Message
+        ChatMessages.Add(new ChatMessageModel
+        {
+            Text = "👋 Hello! I'm your Progress Agentic RAG Financial assistant. I can help you by summarizing financial data and answering questions about companies. Try one of the suggestions below, or ask me anything about financial results of Apple, Amazon, Resolute, Exxon Mobil, Johnson&Johnson, Google, NVIDIA or Berkshire Hathaway!",
+            AuthorId = "bot",
+            AuthorName = string.Empty,
+            Timestamp = DateTime.Now
+        });
+    }
+
+    private RenderFragment RenderChat() => __builder =>
+    {
+        var chatClassName = "k-border-transparent finance-analysis-chat";
+
+        if (IsChartsExpanded)
+        {
+            chatClassName += " finance-analysis-chat-expanded";
+        }
+        else if (ChatMessages.Count > 1)
+        {
+            chatClassName += " finance-analysis-chat-conversation";
+        }
+        else
+        {
+            chatClassName += " finance-analysis-chat-initial";
+        }
+
+        <TelerikChat @ref="ChatRef"
+                     Data="@(ChatMessages.Count > 1 ? ChatMessages.Skip(1).ToList() : ChatMessages.ToList())"
+                     OnSendMessage="@OnSendMessageHandler"
+                     AuthorId="@CurrentUserId"
+                     AuthorImageUrlField="AuthorImageUrl"
+                     Class="@chatClassName"
+                     Height="100%"
+                     MessageWidthMode="MessageWidthMode.Full">
+            <MessageTemplate>
+                @{
+                    var message = context.Message;
+                    var isBot = message?.AuthorId != CurrentUserId;
+                    var lastMessage = ChatMessages.LastOrDefault();
+                    var isLatestBotMessage = isBot && message?.Id == lastMessage?.Id;
+                    var hasCharts = SelectedCharts.Count > 0;
+                    var isTyping = message is ChatMessageModel chatModel && chatModel.IsTyping;
+                }
+                <ChatMessage Text="@message?.Text"
+                             AuthorId="@message?.AuthorId"
+                             UserId="@CurrentUserId"
+                             IsTyping="@isTyping" />
+                @if (isLatestBotMessage && hasCharts && !isTyping)
+                {
+                    <div class="chart-thumbnail" @onclick="@(() => IsChartsExpanded = true)">
+                        <ChartThumbnail />
+                    </div>
+                }
+            </MessageTemplate>
+            <TimestampTemplate>
+                @* Empty to hide timestamps *@
+            </TimestampTemplate>
+            <MessageBoxTemplate>
+                <ChatMessageBox IsLoading="@IsLoading"
+                                Suggestions="@AvailableSuggestions"
+                                OnSuggestionClick="@HandleSuggestionClick"
+                                OnSendMessage="@HandleSendMessage"
+                                Placeholder="Try a suggestion or ask about a company..."
+                                ForceOneRow="@IsChartsExpanded" />
+            </MessageBoxTemplate>
+        </TelerikChat>
+    };
+
+    private TelerikChat<ChatMessageModel>? ChatRef { get; set; }
+
+    private async Task OnSendMessageHandler(ChatSendMessageEventArgs args)
+    {
+        await SendMessage(args.Message);
+    }
+
+    private async Task HandleSendMessage(string text)
+    {
+        await SendMessage(text);
+    }
+
+    private async Task HandleSuggestionClick(ChatSuggestion suggestion)
+    {
+        await SendMessage(suggestion.Text);
+    }
+
+    private void HandleThumbnailClick()
+    {
+        _ = Task.Run(async () =>
+        {
+            await InvokeAsync(() =>
+            {
+                IsChartsExpanded = true;
+                StateHasChanged();
+            });
+        });
+    }
+
+    private void HandleCloseCharts()
+    {
+        _ = Task.Run(async () =>
+        {
+            await InvokeAsync(() =>
+            {
+                IsChartsExpanded = false;
+                StateHasChanged();
+            });
+        });
+    }
+
+    private NucliaDbClient _client;
+
+    public FinancialAnalysis([FromKeyedServices("charts")] NucliaDbClient client)
+    {
+        _client = client;
+    }
+
+    private async Task SendMessage(string messageText)
+    {
+        var userMessage = new ChatMessageModel
+        {
+            Text = messageText,
+            AuthorId = CurrentUserId,
+            AuthorName = "",
+            AuthorImageUrl = "images/drawer-user.svg",
+            Timestamp = DateTime.Now
+        };
+
+        ChatMessages.Add(userMessage);
+        IsLoading = true;
+        StateHasChanged();
+
+        // Bot Response Placeholder with typing indicator
+        var botMessage = new ChatMessageModel
+        {
+            Text = "",
+            AuthorId = "bot",
+            AuthorName = "",
+            Timestamp = DateTime.Now.AddMilliseconds(1),
+            IsTyping = true
+        };
+        ChatMessages.Add(botMessage);
+        StateHasChanged();
+
+        try
+        {
+            var answer = await _client.Search.AskAsync<ChartAugmentedAnswer>(new AskRequest(messageText) { TopK = 5 });
+
+            if (answer.Data != null)
+            {
+                // Replace the placeholder message with the actual response
+                var index = ChatMessages.IndexOf(botMessage);
+                if (index != -1)
+                {
+                    ChatMessages[index] = new ChatMessageModel
+                    {
+                        Id = botMessage.Id,
+                        Text = answer.Data.Answer,
+                        AuthorId = botMessage.AuthorId,
+                        AuthorName = botMessage.AuthorName,
+                        Timestamp = botMessage.Timestamp,
+                        Charts = answer.Data.Charts,
+                        IsTyping = false
+                    };
+                }
+
+                // Update selected charts
+                if (answer.Data.Charts != null && answer.Data.Charts.Any())
+                {
+                    SelectedCharts = answer.Data.Charts.Take(3).ToList();
+                }
+                else
+                {
+                    SelectedCharts = new List<ChartDataModel>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var index = ChatMessages.IndexOf(botMessage);
+            if (index != -1)
+            {
+                ChatMessages[index] = new ChatMessageModel
+                {
+                    Id = botMessage.Id,
+                    Text = "Sorry, I encountered an error processing your request: " + ex.Message,
+                    AuthorId = botMessage.AuthorId,
+                    AuthorName = botMessage.AuthorName,
+                    Timestamp = botMessage.Timestamp
+                };
+            }
+            SelectedCharts = new List<ChartDataModel>();
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public class ChatMessageModel : IChatMessage
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Text { get; set; } = "";
+        public string AuthorId { get; set; } = "";
+        public string AuthorName { get; set; } = "";
+        public string? AuthorImageUrl { get; set; }
+        public DateTime Timestamp { get; set; }
+        public List<ChartDataModel>? Charts { get; set; }
+        public bool IsTyping { get; set; } = false;
+    }
+}

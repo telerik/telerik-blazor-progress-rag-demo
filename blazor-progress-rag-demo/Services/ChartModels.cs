@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace blazor_progress_rag_demo.Services;
@@ -11,6 +12,7 @@ public class NucliaAskResponse
     public string? Answer { get; set; }
 }
 
+[Description("Factual answer optionally accompanied by up to three bar charts reused or subset-filtered from retrieved context.")]
 public class ChartAugmentedAnswer
 {
     [JsonPropertyName("answer")]

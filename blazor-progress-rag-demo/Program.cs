@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using NucliaDb;
 using blazor_progress_rag_demo.Services;
+using NucliaDb;
+using NucliaDb.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,13 +31,10 @@ var verseConfig = new NucliaDbConfig(
     nucleiaVerseConfig["ApiKey"] ?? throw new InvalidOperationException("NucliaDbVerse ApiKey not configured")
 );
 
-builder.Services.AddScoped(sp =>
-{
-    var defaultClient = new NucliaDbClient(config);
-    var chartsClient = new NucliaDbClient(chartsConfig);
-    var verseClient = new NucliaDbClient(verseConfig);
-    return new NucliaSearchService(defaultClient, chartsClient, verseClient);
-});
+builder.Services.AddKeyedNucliaDb("default", config);
+builder.Services.AddKeyedNucliaDb("charts", chartsConfig);
+builder.Services.AddKeyedNucliaDb("verse", verseConfig);
+builder.Services.AddScoped<NucliaSearchService>();
 
 var app = builder.Build();
 

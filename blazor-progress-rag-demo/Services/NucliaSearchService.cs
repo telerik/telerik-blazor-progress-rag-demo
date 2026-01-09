@@ -31,13 +31,13 @@ public class StreamingAskResult
 public class NucliaSearchService
 {
     private readonly NucliaDbClient _client;
-    private readonly NucliaDbClient _chartsClient;
     private readonly NucliaDbClient _verseClient;
 
-    public NucliaSearchService(NucliaDbClient client, NucliaDbClient chartsClient, NucliaDbClient verseClient)
+    public NucliaSearchService(
+        [FromKeyedServices("default")] NucliaDbClient client, 
+        [FromKeyedServices("verse")] NucliaDbClient verseClient)
     {
         _client = client;
-        _chartsClient = chartsClient;
         _verseClient = verseClient;
     }
 
@@ -76,77 +76,6 @@ public class NucliaSearchService
                     result.Citations = citations.Citations.Index();
                     break;
             }
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Sends an ask request to the charts knowledge box and streams the response.
-    /// </summary>
-    public async Task<StreamingAskResult> AskChartsAsync(string query, Action<string>? onUpdate = null, int topK = 5, CancellationToken cancellationToken = default)
-    {
-        var result = new StreamingAskResult();
-
-        var askRequest = new AskRequest(query)
-        {
-            TopK = topK,
-            AnswerJsonSchema = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(Schemas.ChartJsonSchema),
-            Citations = new Citations(false),
-        };
-
-        // Try non-streaming to see if it handles the schema response better
-        /*
-        var streamResponse = _chartsClient.Search.AskStreamAsync(askRequest, cancellationToken);
-        await foreach (var response in streamResponse)
-        {
-            switch (response.Item)
-            {
-                case AnswerContent answer:
-                    result.Response += answer.Text;
-                    onUpdate?.Invoke(result.Response);
-                    await Task.Delay(1); // brief yield for UI responsiveness
-                    break;
-                case RetrievalContent retrieval:
-                    result.OriginalResources = retrieval.Results?.Resources as object;
-                    break;
-                case CitationsContent citations:
-                    result.Citations = citations.Citations.Index();
-                    break;
-            }
-        }
-        */
-
-        // Fallback to AskAsync (non-streaming) to debug
-        try 
-        {
-            var response = await _chartsClient.Search.AskAsync(askRequest, cancellationToken);
-            
-            if (response.Data != null)
-            {
-                // Serialize the response data to JSON to extract the "answer_json" property
-                var json = System.Text.Json.JsonSerializer.Serialize(response.Data);
-                
-                // Deserialize into our custom model that includes answer_json
-                var askResponse = System.Text.Json.JsonSerializer.Deserialize<NucliaAskResponse>(json);
-
-                if (askResponse?.AnswerJson != null)
-                {
-                    // Return the serialized AnswerJson so the UI can consume it
-                    result.Response = System.Text.Json.JsonSerializer.Serialize(askResponse.AnswerJson);
-                    onUpdate?.Invoke(result.Response);
-                }
-                else if (!string.IsNullOrEmpty(askResponse?.Answer))
-                {
-                    result.Response = askResponse.Answer;
-                    onUpdate?.Invoke(result.Response);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"AskAsync failed: {ex.Message}");
-            throw;
         }
 
         return result;
