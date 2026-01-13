@@ -1,6 +1,6 @@
 using blazor_progress_rag_demo.Services;
-using NucliaDb;
-using NucliaDb.Extensions;
+using Progress.Nuclia;
+using Progress.Nuclia.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,27 +9,15 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddTelerikBlazor();
 
-// Configure NucliaDB client
-var nucleiaConfig = builder.Configuration.GetSection("NucliaDb");
-var config = new NucliaDbConfig(
-    nucleiaConfig["ZoneId"] ?? throw new InvalidOperationException("NucliaDb ZoneId not configured"),
-    nucleiaConfig["KnowledgeBoxId"] ?? throw new InvalidOperationException("NucliaDb KnowledgeBoxId not configured"),
-    nucleiaConfig["ApiKey"] ?? throw new InvalidOperationException("NucliaDb ApiKey not configured")
-);
+// Configure NucliaDB client using Options pattern
+var config = builder.Configuration.GetSection("NucliaDb").Get<NucliaDbConfig>()
+    ?? throw new InvalidOperationException("NucliaDb configuration is missing or invalid");
 
-var nucleiaChartsConfig = builder.Configuration.GetSection("NucliaDbCharts");
-var chartsConfig = new NucliaDbConfig(
-    nucleiaChartsConfig["ZoneId"] ?? throw new InvalidOperationException("NucliaDbCharts ZoneId not configured"),
-    nucleiaChartsConfig["KnowledgeBoxId"] ?? throw new InvalidOperationException("NucliaDbCharts KnowledgeBoxId not configured"),
-    nucleiaChartsConfig["ApiKey"] ?? throw new InvalidOperationException("NucliaDbCharts ApiKey not configured")
-);
+var chartsConfig = builder.Configuration.GetSection("NucliaDbCharts").Get<NucliaDbConfig>()
+    ?? throw new InvalidOperationException("NucliaDbCharts configuration is missing or invalid");
 
-var nucleiaVerseConfig = builder.Configuration.GetSection("NucliaDbVerse");
-var verseConfig = new NucliaDbConfig(
-    nucleiaVerseConfig["ZoneId"] ?? throw new InvalidOperationException("NucliaDbVerse ZoneId not configured"),
-    nucleiaVerseConfig["KnowledgeBoxId"] ?? throw new InvalidOperationException("NucliaDbVerse KnowledgeBoxId not configured"),
-    nucleiaVerseConfig["ApiKey"] ?? throw new InvalidOperationException("NucliaDbVerse ApiKey not configured")
-);
+var verseConfig = builder.Configuration.GetSection("NucliaDbVerse").Get<NucliaDbConfig>()
+    ?? throw new InvalidOperationException("NucliaDbVerse configuration is missing or invalid");
 
 builder.Services.AddKeyedNucliaDb("default", config);
 builder.Services.AddKeyedNucliaDb("charts", chartsConfig);

@@ -1,6 +1,6 @@
-using NucliaDb;
-using NucliaDb.Model;
-using NucliaDb.Model.Streaming;
+using Progress.Nuclia;
+using Progress.Nuclia.Model;
+using Progress.Nuclia.Model.Streaming;
 
 namespace blazor_progress_rag_demo.Services;
 

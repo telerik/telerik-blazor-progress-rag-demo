@@ -1,8 +1,8 @@
 @page "/financial-analysis"
 @page "/finance-analysis"
-@using NucliaDb
+@using Progress.Nuclia
 @using System.Collections.ObjectModel
-@using NucliaDb.Model
+@using Progress.Nuclia.Model
 @using Telerik.Blazor.Components
 @using Telerik.SvgIcons
 
@@ -135,20 +135,10 @@ else
 
     private RenderFragment RenderChat() => __builder =>
     {
-        var chatClassName = "k-border-transparent finance-analysis-chat";
-
-        if (IsChartsExpanded)
-        {
-            chatClassName += " finance-analysis-chat-expanded";
-        }
-        else if (ChatMessages.Count > 1)
-        {
-            chatClassName += " finance-analysis-chat-conversation";
-        }
-        else
-        {
-            chatClassName += " finance-analysis-chat-initial";
-        }
+        var chatClassName = "k-border-transparent finance-analysis-chat" +
+            (IsChartsExpanded ? " finance-analysis-chat-expanded" :
+             ChatMessages.Count > 1 ? " finance-analysis-chat-conversation" :
+             " finance-analysis-chat-initial");
 
         <TelerikChat @ref="ChatRef"
                      Data="@(ChatMessages.Count > 1 ? ChatMessages.Skip(1).ToList() : ChatMessages.ToList())"
@@ -171,12 +161,9 @@ else
                              AuthorId="@message?.AuthorId"
                              UserId="@CurrentUserId"
                              IsTyping="@isTyping" />
-                @if (isLatestBotMessage && hasCharts && !isTyping)
-                {
-                    <div class="chart-thumbnail" @onclick="@(() => IsChartsExpanded = true)">
-                        <ChartThumbnail />
-                    </div>
-                }
+
+                <ChartThumbnail Visible="isLatestBotMessage && hasCharts && !isTyping" OnChartsExpanded="@(() => IsChartsExpanded = true)" />
+
             </MessageTemplate>
             <TimestampTemplate>
                 @* Empty to hide timestamps *@
@@ -207,18 +194,6 @@ else
     private async Task HandleSuggestionClick(ChatSuggestion suggestion)
     {
         await SendMessage(suggestion.Text);
-    }
-
-    private void HandleThumbnailClick()
-    {
-        _ = Task.Run(async () =>
-        {
-            await InvokeAsync(() =>
-            {
-                IsChartsExpanded = true;
-                StateHasChanged();
-            });
-        });
     }
 
     private void HandleCloseCharts()

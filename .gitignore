@@ -6,3 +6,4 @@
 /.vscode/
 
 blazor-progress-rag-demo/appsettings.Development.json
+.vs/*
