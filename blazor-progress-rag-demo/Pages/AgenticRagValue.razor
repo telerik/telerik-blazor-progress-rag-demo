@@ -1,8 +1,10 @@
 @page "/agentic-rag-value"
 @page "/value-proposition"
+@using Progress.Nuclia
+@using Progress.Nuclia.Model
+@using Progress.Nuclia.Model.Streaming
 @using Telerik.Blazor.Components
 @using blazor_progress_rag_demo.Services
-@inject NucliaSearchService NucliaService
 
 <PageTitle>Agentic RAG Value</PageTitle>
 
@@ -158,10 +160,11 @@
             </section>
 
             @* Results content *@
-            @if (!IsLoading && !string.IsNullOrEmpty(ValueProposition))
+            @if (!IsLoading && !string.IsNullOrEmpty(ValueProposition) || !string.IsNullOrEmpty(ValueProposition))
             {
                 <section class="value-proposition-results-section k-d-flex k-flex-column k-gap-8 k-align-items-center k-px-6 k-py-16">
                     <div class="value-proposition-results-content markdown-content k-w-full">
+                        @StreamingText
                         <MarkdownContent Text="@ValueProposition" />
                     </div>
                 </section>
@@ -178,6 +181,7 @@
     private string? AdditionalDetails { get; set; }
     private bool IsLoading { get; set; } = false;
     private string ValueProposition { get; set; } = string.Empty;
+    private string StreamingText { get; set; } = string.Empty;
 
     private bool HasResults => !string.IsNullOrEmpty(ValueProposition) || IsLoading;
 
@@ -260,6 +264,12 @@
         return string.Join(" ", parts);
     }
 
+    private readonly NucliaDbClient nucliaDbClient;
+    public AgenticRagValue([FromKeyedServices("verse")] NucliaDbClient client)
+    {
+        nucliaDbClient = client;
+    }
+
     private async Task HandleGenerate()
     {
         var question = GenerateQuestion();
@@ -270,11 +280,15 @@
 
         try
         {
-            await NucliaService.AskVerseAsync(question, (chunk) =>
+            await foreach (var chunk in nucliaDbClient.Search.AskStreamAsync(new AskRequest(question) { TopK = 5 }))
             {
-                ValueProposition = chunk;
-                InvokeAsync(StateHasChanged);
-            });
+                if (chunk.Item is AnswerContent answer)
+                {
+                    ValueProposition += answer.Text;
+                    await Task.Delay(1); // brief yield for UI responsiveness
+                    StateHasChanged();
+                }
+            }
         }
         catch (Exception ex)
         {

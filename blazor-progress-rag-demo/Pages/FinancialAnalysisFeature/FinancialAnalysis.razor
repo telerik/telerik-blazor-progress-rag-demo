@@ -114,9 +114,9 @@ else
 
     private List<ChatSuggestion> FinancialSuggestions = new List<ChatSuggestion>
     {
-        new ChatSuggestion { Id = "1", Text = "Compare Nvidia and Google revenue?" },
-        new ChatSuggestion { Id = "2", Text = "How does each product line contribute to Apple's revenue?" },
-        new ChatSuggestion { Id = "3", Text = "What are the financial results of Google in 2024 compared to 2023?" }
+        new ChatSuggestion("1", "Compare Nvidia and Google revenue?"),
+        new ChatSuggestion("2", "How does each product line contribute to Apple's revenue?"),
+        new ChatSuggestion("3", "What are the financial results of Google in 2024 compared to 2023?")
     };
 
     private List<ChatSuggestion> AvailableSuggestions => ChatMessages.Count <= 1 ? FinancialSuggestions : new List<ChatSuggestion>();
@@ -208,11 +208,11 @@ else
         });
     }
 
-    private NucliaDbClient _client;
+    private NucliaDbClient nucliaChartClient;
 
     public FinancialAnalysis([FromKeyedServices("charts")] NucliaDbClient client)
     {
-        _client = client;
+        nucliaChartClient = client;
     }
 
     private async Task SendMessage(string messageText)
@@ -244,7 +244,7 @@ else
 
         try
         {
-            var answer = await _client.Search.AskAsync<ChartAugmentedAnswer>(new AskRequest(messageText) { TopK = 5 });
+            var answer = await nucliaChartClient.Search.AskAsync<ChartAugmentedAnswer>(new AskRequest(messageText) { TopK = 5 });
 
             if (answer.Data != null)
             {

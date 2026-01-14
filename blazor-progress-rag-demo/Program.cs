@@ -22,7 +22,6 @@ var verseConfig = builder.Configuration.GetSection("NucliaDbVerse").Get<NucliaDb
 builder.Services.AddKeyedNucliaDb("default", config);
 builder.Services.AddKeyedNucliaDb("charts", chartsConfig);
 builder.Services.AddKeyedNucliaDb("verse", verseConfig);
-builder.Services.AddScoped<NucliaSearchService>();
 
 var app = builder.Build();
 
