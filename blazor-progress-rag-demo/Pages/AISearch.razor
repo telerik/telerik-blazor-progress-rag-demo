@@ -1,9 +1,12 @@
 @page "/ai-search"
+@using Progress.Nuclia
+@using Progress.Nuclia.Model
+@using Progress.Nuclia.Model.Streaming
 @using Telerik.Blazor.Components
 @using Telerik.Blazor
 @using blazor_progress_rag_demo.Services
-@inject NucliaSearchService NucliaService
-@inject NavigationManager NavigationManager
+
+
 
 <div class="ai-search-container k-pos-relative k-overflow-x-hidden k-overflow-y-auto">
     @if (!HasResults)
@@ -103,9 +106,10 @@
                                         Subtitle="Analyzing your query..." />
                     }
 
-                    @if (!IsLoading && !string.IsNullOrEmpty(Answer))
+                    @if (!IsLoading && !string.IsNullOrEmpty(Answer) || !string.IsNullOrEmpty(StreamingAnswer))
                     {
                         <div class="ai-search-answer-text markdown-content">
+                            @StreamingAnswer
                             <MarkdownContent Text="@Answer" />
                         </div>
                     }
@@ -138,8 +142,9 @@
     private bool IsLoading { get; set; } = false;
     private string Answer { get; set; } = string.Empty;
     private string CurrentQuestion { get; set; } = string.Empty;
+    private string StreamingAnswer { get; set; } = string.Empty;
 
-    private bool HasResults => !string.IsNullOrEmpty(Answer) || IsLoading || !string.IsNullOrEmpty(CurrentQuestion);
+    private bool HasResults => !string.IsNullOrEmpty(StreamingAnswer) || !string.IsNullOrEmpty(Answer) || IsLoading || !string.IsNullOrEmpty(CurrentQuestion);
 
     private List<string> PopularSearches = new List<string>
     {
@@ -150,6 +155,16 @@
         "Pricing and licensing options",
         "Use cases and customer success stories"
     };
+
+    private NucliaDbClient nucliaSearchClient;
+    private NavigationManager NavigationManager;
+
+    public AISearch([FromKeyedServices("verse")] NucliaDbClient client,
+                    NavigationManager navigationManager)
+    {
+        nucliaSearchClient = client;
+        NavigationManager = navigationManager;
+    }
 
     protected override void OnInitialized()
     {
@@ -176,11 +191,20 @@
 
         try
         {
-            await NucliaService.AskVerseAsync(Query, (partialResponse) =>
+            var askRequest = new AskRequest(CurrentQuestion) { TopK = 5 };
+            var streamResponse = nucliaSearchClient.Search.AskStreamAsync(askRequest);
+            await foreach (var response in streamResponse)
             {
-                Answer = partialResponse;
-                InvokeAsync(StateHasChanged);
-            });
+                if(response.Item is AnswerContent answer)
+                {
+                    StreamingAnswer += answer.Text;
+                    IsLoading = false;
+                    await Task.Delay(1); // brief yield for UI responsiveness
+                    StateHasChanged();
+                }
+            }
+            Answer = StreamingAnswer;
+            StreamingAnswer = string.Empty;
         }
         catch (Exception ex)
         {

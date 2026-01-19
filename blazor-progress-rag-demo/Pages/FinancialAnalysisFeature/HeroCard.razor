@@ -1,0 +1,18 @@
+﻿@if (Visible)
+{
+    <div class="k-d-flex k-flex-column k-pos-relative k-p-12 hero">
+        <div class="k-d-flex k-flex-column k-w-full k-gap-8">
+            <h1 class="finance-analysis-title !k-mb-0 k-h1">
+                Progress Agentic RAG Financial Charts Analysis
+            </h1>
+            <p class="finance-analysis-description !k-mb-0">
+                Use AI search to quickly find accurate, relevant information about Progress Agentic RAG—its features, capabilities, and best practices.
+            </p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool Visible { get; set; }
+}

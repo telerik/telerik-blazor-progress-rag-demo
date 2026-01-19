@@ -1,9 +1,11 @@
 @page "/knowledge-assistant"
+@using Progress.Nuclia
+@using Progress.Nuclia.Model
+@using Progress.Nuclia.Model.Streaming
 @using Telerik.Blazor.Components
 @using Telerik.SvgIcons
 @using System.Collections.ObjectModel
 @using blazor_progress_rag_demo.Services
-@inject blazor_progress_rag_demo.Services.NucliaSearchService NucliaService
 
 <DrawerComponent>
     <div class="knowledge-assistant-container k-d-flex k-flex-column k-overflow-x-hidden k-pos-relative k-h-full">
@@ -35,7 +37,7 @@
         <div class="knowledge-assistant-conversation k-d-flex k-flex-column k-flex-1 k-align-items-center k-w-full k-p-6 k-gap-8 conversation-container @(HasConversationStarted ? "knowledge-assistant-conversation-started" : "")">
             <div class="knowledge-assistant-chat-wrapper chat-content-wrapper k-w-full k-d-flex k-flex-column k-pos-relative @(!HasConversationStarted ? "show-gradient" : "") @(HasConversationStarted ? "knowledge-assistant-chat-flex-full" : "knowledge-assistant-chat-flex-none")">
                 <TelerikChat @ref="ChatRef"
-                             Data="@(HasConversationStarted ? ChatMessages.Skip(1).ToList() : ChatMessages.ToList())"
+                             Data="@(HasConversationStarted? ChatMessages.Skip(1).ToList() : ChatMessages.ToList())"
                              OnSendMessage="@OnSendMessageHandler"
                              AuthorId="@CurrentUserId"
                              AuthorImageUrlField="AuthorImageUrl"
@@ -81,12 +83,19 @@
 
     private List<ChatSuggestion> KendoSuggestions = new List<ChatSuggestion>
     {
-        new ChatSuggestion { Id = "1", Text = "How do I get started with KendoReact components?" },
-        new ChatSuggestion { Id = "2", Text = "What are the best KendoReact components for data visualization?" },
-        new ChatSuggestion { Id = "3", Text = "How to implement theming and styling in KendoReact?" }
+        new ChatSuggestion("1", "How do I get started with KendoReact components?"),
+        new ChatSuggestion("2", "What are the best KendoReact components for data visualization?"),
+        new ChatSuggestion("3", "How to implement theming and styling in KendoReact?")
     };
 
     private List<ChatSuggestion> AvailableSuggestions => ChatMessages.Count <= 1 ? KendoSuggestions : new List<ChatSuggestion>();
+
+    private readonly NucliaDbClient nucliaSearchClient;
+
+    public KnowledgeAssistant([FromKeyedServices("default")] NucliaDbClient client)
+    {
+        nucliaSearchClient = client;
+    }
 
     protected override void OnInitialized()
     {
@@ -140,46 +149,44 @@
             IsTyping = true
         };
         ChatMessages.Add(botMessage);
+        var index = ChatMessages.IndexOf(botMessage);
+
         StateHasChanged();
 
-        try 
+        try
         {
-            await NucliaService.AskAsync(messageText, (partialResponse) => 
+            var streamingText = "";
+            await foreach (var response in nucliaSearchClient.Search.AskStreamAsync(new AskRequest(messageText) { TopK = 5 }))
             {
-                InvokeAsync(() => {
-                    var index = ChatMessages.IndexOf(botMessage);
-                    if (index != -1)
+                if (response.Item is AnswerContent answer)
+                {
+                    streamingText += answer.Text;
+                    var updatedMessage = new ChatMessageModel
                     {
-                        var updatedMessage = new ChatMessageModel
-                        {
-                            Id = botMessage.Id,
-                            Text = partialResponse,
-                            AuthorId = botMessage.AuthorId,
-                            AuthorName = botMessage.AuthorName,
-                            Timestamp = botMessage.Timestamp,
-                            IsTyping = false
-                        };
-                        ChatMessages[index] = updatedMessage;
-                        botMessage = updatedMessage;
-                        StateHasChanged();
-                    }
-                });
-            });
+                        Id = botMessage.Id,
+                        Text = streamingText,
+                        AuthorId = botMessage.AuthorId,
+                        AuthorName = botMessage.AuthorName,
+                        Timestamp = botMessage.Timestamp,
+                        IsTyping = false
+                    };
+                    ChatMessages[index] = updatedMessage;
+                    botMessage = updatedMessage;
+                    await Task.Delay(1); // brief yield for UI responsiveness
+                    StateHasChanged();
+                }
+            }
         }
         catch (Exception ex)
         {
-            var index = ChatMessages.IndexOf(botMessage);
-            if (index != -1)
+            ChatMessages[index] = new ChatMessageModel
             {
-                ChatMessages[index] = new ChatMessageModel
-                {
-                    Id = botMessage.Id,
-                    Text = "Sorry, I encountered an error processing your request: " + ex.Message,
-                    AuthorId = botMessage.AuthorId,
-                    AuthorName = botMessage.AuthorName,
-                    Timestamp = botMessage.Timestamp
-                };
-            }
+                Id = botMessage.Id,
+                Text = "Sorry, I encountered an error processing your request: " + ex.Message,
+                AuthorId = botMessage.AuthorId,
+                AuthorName = botMessage.AuthorName,
+                Timestamp = botMessage.Timestamp
+            };
             Console.WriteLine(ex);
         }
         finally
